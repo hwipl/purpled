@@ -1,0 +1,7 @@
+CC=@CC@
+CFLAGS=@CFLAGS@ @PURPLE_CFLAGS@ @GLIB_CFLAGS@ -Wfatal-errors 
+LDFLAGS= @LDFLAGS@ @LIBS@
+nullclient: nullclient.o
+nullclient.o: nullclient.c
+clean:
+	rm -f *.o
