@@ -1,0 +1,78 @@
+
+Note: purpled is not even alpha. Alot of stuff is undecided yet. This file
+provides not a release-grade information, but some hints on how to get
+this dirty source working. 
+
+//Depends on: glib >= 2.0, libpurple.
+
+
+###
+### BUILD
+###
+
+##
+## FreeBSD
+#
+
+Install libpurple from ports (I found it in /usr/ports/net-im/libpurple)
+
+$ cp Makefile.BSD Makefile
+$ make
+
+
+##
+## Using automake
+#
+
+Copy aclocal.m4 and acinclude.m4 from pidgin source distribution.
+
+Now you can just:
+
+$ autoconf
+$ ./configure
+$ make
+
+##
+## Edit makefile
+#
+
+Do we really need autoconf to find 2 libraries?
+
+Perhaps one can get away by just editing the Makefile. 
+All it needs are header paths for glib and libpurple.
+
+$ vi Makefile
+$ make
+
+##
+## Why so incosistent?
+#
+
+As many things with purpled, that was left undecided and can go
+both ways from here. Uh oh. 
+
+
+###
+### INSTALL
+###
+
+So where should you put purpled? Another good question I don't have
+answer for. Well, 1 idea would be to use
+/usr/local/bin 		-- for binary
+/usr/local/etc/purpled  -- for config
+/var/log/purpled.log	-- log file
+
+But, some people prefer to run things this way (especialy where 
+there are indeed other users on the machine):
+
+/home/user/purpled	-- binary, config, logs
+
+
+Should purpled be running under root?
+    As far as I can tell: NO! NO! NO!
+
+###
+### INIT SCRIPTS
+###
+
+No init scripts are available at the moment. Sorry :(

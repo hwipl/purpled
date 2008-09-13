@@ -1,0 +1,148 @@
+Please refer to INSTALL for building information.
+
+Let's assume you have 'purpled' process running. 
+
+Try fetching "http://localhost:32000/who". If it returns
+something like "????/http0 127.0.0.1", you're good.
+
+What can you do with it?
+
+##
+## Raw socket or telnet
+#
+
+$ nc localhost 32000
+    OR
+$ telnet localhost 32000
+
+Buffering is implemented, so access over internet would probably
+work.
+
+Caution: anyone can login to your purpled! It's not protected at all!
+Use iptables to disable remote access!
+
+##
+## IRC or HTTP
+#
+
+purpleD supports some simplified connection wrappers
+for easy access with IRC and HTTP clients. I tried
+irssi and X-Chat for irc; Opera and wget for web.
+
+address: localhost 
+port: 32000
+
+For IRC method, all commands must be passed to &root
+channel, all the output will be provided there too.
+
+For HTTP GET method, substitute spaces with '+' symbol, then pass the 
+command after the / path. For example, "account list" becomes
+"http://localhost:32000/account+list".
+
+For HTTP POST method, pass command as "http_offset" field AND prepend the
+command itself with space. If you're doing it from a HTML form, it will
+look like this "<input name='http_offset' value=' account list'>". Mind the
+gap!
+
+After the initial reply, HTTP connection will close. All other types
+of connections stay online until you close the socket.
+
+##
+## Commands
+#
+
+All commands are separated by LF. It is OK to separate them with CRLF,
+in which case CR will be striped.
+
+who
+
+    Returns the list of clients connected to the daemon
+
+account
+
+    Multi-purpose command with several meanings. You can use
+    "acc" as an alias.
+    
+    account add PROTOCOL USERNAME PASSWORD
+    
+	Note: protocol name is specified like this: "msn", "icq", "xmpp".
+	Note: username must often include server address too!
+    
+    account list
+    
+	Lists all accounts and their states.
+	
+    accound ID
+    
+	Multi-purpose command to perform an operation on an account.
+	ID either specifies index number from "account list" output,
+	either an alias assigned with "account ID set alias ALIAS"
+	command.
+	Note: if several accounts share an alias, one with the lowest
+	index number will be selected, and the others - neglected.
+	
+	account ID up
+	
+	    Go online.
+	    
+	account ID down
+	
+	    Go offline.
+	    
+	account ID disable.
+	
+	    Disable an account.
+	    
+	account ID enable.
+	
+	    Enable an account.
+
+	account ID set SETTING VALUE
+	
+	    Set an account setting.
+	    Note: those settings have special values: "alias", "username", 
+	    "password"
+	    Note: by setting alias you can refer to an account with it after-
+	    wards.
+	    
+	account ID delete
+	
+	    Permamently delete an account.
+
+	account ID send USERNAME MESSAGE
+	
+	    Sends Instant Message to specified user. 
+	    Note: please provide sufficient username!
+	
+	account ID collect [TIME]
+	
+	    Gets conversation messages from account since the last time this 
+	    command was issued by this connection.
+	
+	    Note: you can force TIME by providing it in a UNIX epoch, this is 
+	    usefull for http connections, which are not persistent.
+
+##
+## Example.
+#
+
+This is how a telnet session might look like:
+
+account add xmpp robot@my_jabber_server.com my_password
+account list
+Accounts:
+0) XMPP robot@my_jabber_server.com [Offline]
+account 0 set alias jabber
+account jabber up
+account list
+0) (jabber) XMPP robot@my_jabber_server.com [Available]
+account jabber send john_doe@my_jabber_server.com Hello World!
+
+##
+## Bonus.
+#
+
+Since purpleD is nothing but a libpurple wrapper, most of the goodies
+are available to you directly! .xml files contain lots of config
+options; d-bus still works, so you can go pretty complex, without
+even relying on "commands"/socket interface.

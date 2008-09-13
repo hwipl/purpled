@@ -128,6 +128,7 @@ static PurpleEventLoopUiOps glib_eventloops =
 /*** End of the eventloop functions. ***/
 
 void client_command(client* ptr, char *mesg);
+void purpld_proccess_client(client* ptr);
 void purpld_client_send(client* ptr, const char *mesg);
 
 int total_c = 0;
@@ -338,6 +339,14 @@ int strrpos(char *str, char substr, int len) {
 		if (str[i] == substr) return i;
 	return -1;
 }
+int strcrep(char *str, char src, char dst) {
+	char *ptr = str;
+	while (*ptr != '\0') {
+		if(*ptr == src)
+			*ptr = dst;
+		ptr++;
+	}
+}
 
 static gint find_account(gconstpointer a, gconstpointer b) {
 	PurpleAccount *account = (PurpleAccount *)a;
@@ -437,6 +446,52 @@ gboolean respond_irc_generic(client* ptr, char *mesg, char **args, gpointer user
 	return TRUE;
 }
 
+gboolean respond_http_command(client* ptr, char *mesg, char **args, gpointer user_data) {
+	char buf[PD_SMALL_BUFFER];
+	strcpy(buf, args[1]);
+	client_command(ptr, buf) ;
+	return TRUE;
+}
+gboolean respond_http_content(client* ptr, char *mesg, char **args, gpointer user_data) {
+	ptr->conntype = CONNECTION_HTTP;
+	ptr->content_length = atoi(args[1]);
+	if (strlen(ptr->buffer) == ptr->content_length) {
+		strcat(ptr->buffer, "\n");
+	}
+	purpld_proccess_client(ptr);
+	return TRUE;
+}
+gboolean respond_http_generic(client* ptr, char *mesg, char **args, gpointer user_data) {
+#if 0
+	printf ("HTTP:\n");
+	int i = 0;
+	for (i = 0; args[i]; i++) {
+		printf ("%c) %s\n", 64+i, args[i]);
+	}
+#endif
+	ptr->conntype = CONNECTION_HTTP;
+	gchar *msg;
+	msg = g_strdup_printf("%s 200 OK\r\n", args[2]);
+	purpld_client_send(ptr, msg);
+	g_free(msg);
+	
+	msg = g_strdup_printf("Content-type: text/html\r\n\r\n", args[2]);
+	purpld_client_send(ptr, msg);
+	g_free(msg);
+
+	/* Get command from GET */	
+	if (strlen(args[1]) > 1) {
+		char buf[PD_SMALL_BUFFER];
+		bzero(&buf, PD_SMALL_BUFFER);
+		strcpy(buf, args[1]);
+		strcrep(buf, '+', ' ');
+		strleft(buf, strlen(buf),1);
+		client_command(ptr, buf) ;
+	} 
+	ptr->kill = TRUE;
+	return TRUE;
+}
+
 gboolean respond_generic_dummy(client* ptr, char *mesg, char **args, gpointer user_data) {
 	printf ("Command parser sample function.\n");
 
@@ -457,7 +512,8 @@ gboolean respond_command_who(client* ptr, char *mesg, char **args, gpointer user
 	for (iter = g_list_first(clients);iter;iter = iter->next) {
 		cli = iter->data;
 		buf = g_strdup_printf ("%10s/%s%d %s\n",	( cli->user[0] ? cli->user : "????" ), 
-													( cli->conntype == CONNECTION_IRC ? "irc" : "raw" ),
+													( cli->conntype == CONNECTION_IRC ? "irc" : 
+														( cli->conntype == CONNECTION_HTTP ? "http" : "raw" ) ),
 														cli->instance, inet_ntoa(cli->addr.sin_addr) );
 		purpld_client_send(ptr, buf);
 		g_free(buf);
@@ -509,6 +565,7 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 	GList *iter1, *iter2;
 	gchar *buf;	
 	
+	if (args[1]) ptr->lastcollect = atoi(args[1]);
 	for (iter1 = purple_get_conversations(); iter1; iter1=iter1->next) {
 		conv = iter1->data;
 		PurpleAccount *ac = purple_conversation_get_account(conv);
@@ -725,6 +782,11 @@ void client_command(client* ptr, char *mesg) {
 		{ "user", respond_to_login, 5 },		
 		{ "pass", respond_to_login, 0 },
 		
+		{ "GET", respond_http_generic, 0 },
+		{ "POST", respond_http_generic, 0 },
+		{ "Content-Length:", respond_http_content, 0 },
+		{ "http_offset=", respond_http_command, 2 },
+		
 	  	{ "account", respond_process_account, 2 }, 
 	  	{ "acc", respond_process_account, 2 }, //acc - shorthand for account
 	  	{ "who", respond_command_who, 0 }
@@ -734,6 +796,8 @@ void client_command(client* ptr, char *mesg) {
 	mesg = g_strchomp(mesg);
 	if (mesg[0] == '\0') return;
 	
+	if (ptr->conntype == CONNECTION_HTTP) strcrep(mesg, '+', ' ');
+
 	//printf("DOING COMMAND \"%s\" \n", mesg);
 
 	purpld_parse_command(ptr, mesg, cli_commands, cli_len, 0);
@@ -788,6 +852,7 @@ void purpld_proccess_client(client* ptr) {
 	char mesg[PD_LARGE_BUFFER]; //mini-buffer
 	
 	len = strlen(ptr->buffer);
+	//if (ptr->content_length && len >= ptr->content_length) {}
 	//if (len > PD_BUFFER_LENGTH) { printf ("FATAL ERROR"); exit; }
 		
 	/* No command ready, just buffer */
@@ -850,7 +915,17 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition, gp
 
 	strcat(client_ptr->buffer, mesg);
 
-	purpld_proccess_client(client_ptr);		
+	purpld_proccess_client(client_ptr);
+	
+	if (client_ptr->kill == TRUE) {
+		printf("Connection [%d] closed\n", connfd);
+
+		close(connfd);
+
+		clients = g_list_remove( clients, client_ptr );      
+
+		return FALSE;
+   }		
 				
 	return TRUE;         
 }
