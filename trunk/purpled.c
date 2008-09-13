@@ -144,10 +144,10 @@ void purpld_inform_client(PurpleAccount *account, char *message) {
 	}
 }
 
-
+/*** Notify uiops ***/
 #if 0
 static void *
-null_notify_message(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary)
+purpld_notify_message(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary)
 {
 	char mes[PD_STRING];
 	sprintf(mes, "%s %s", primary, secondary);
@@ -156,18 +156,18 @@ null_notify_message(PurpleNotifyMsgType type, const char *title, const char *pri
 #endif
 
 static void *
-null_notify_userinfo(PurpleConnection *gc, const char *who, PurpleNotifyUserInfo *user_info)
+purpld_notify_userinfo(PurpleConnection *gc, const char *who, PurpleNotifyUserInfo *user_info)
 {
 	GList *iter;
-	char info[PD_STRING];
 
 	PurpleAccount *account = purple_connection_get_account(gc);
 	
 	for (iter = purple_notify_user_info_get_entries(user_info); iter;	iter=iter->next) {
 		PurpleNotifyUserInfoEntry *ent = iter->data;
-		sprintf (info, "%s = %s \n", purple_notify_user_info_entry_get_label(ent), purple_notify_user_info_entry_get_value(ent));
+		gchar *info = g_strdup_printf("%s = %s \n", purple_notify_user_info_entry_get_label(ent), purple_notify_user_info_entry_get_value(ent));
 		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
 		purpld_inform_client(account, info);
+		g_free(info);
 	}	
 	
 	//info = purple_notify_user_info_get_text_with_newline(user_info, "<BR>");
@@ -175,15 +175,15 @@ null_notify_userinfo(PurpleConnection *gc, const char *who, PurpleNotifyUserInfo
 	//	g_free(info);
 }
 
-static PurpleNotifyUiOps null_notify_uiops = 
+static PurpleNotifyUiOps purpld_notify_uiops = 
 {	
-	NULL,//null_notify_message, /* message */
+	NULL,//purpld_notify_message, /* message */
 	NULL, 						/* email */
 	NULL,							/* emails */
 	NULL, 						/* formatted */
 	NULL, 						/* search */
 	NULL, 						/* search new rows */
-	null_notify_userinfo, 	/* user_info ! */
+	purpld_notify_userinfo, 	/* user_info ! */
 	NULL, 						/* uri */
 	NULL,					 		/* close! */
 	NULL,
@@ -192,9 +192,56 @@ static PurpleNotifyUiOps null_notify_uiops =
 	NULL
 };
 
+/*** Request uiops ***/
+static void*
+purpld_request_action(const char *title, const char *primary,
+		const char *secondary, int default_value,
+		PurpleAccount *account, const char *who, PurpleConversation *conv,
+		void *user_data, size_t actioncount,
+		va_list actions)
+{
+
+	printf("libpurple request:\"%s - %s  - %s\"", title, primary, secondary);
+	int i;
+	gboolean done = FALSE;
+	for (i = 0; i < actioncount; i++)
+	{
+		const char *text = va_arg(actions, const char *);
+		PurpleRequestActionCb callback = va_arg(actions, PurpleRequestActionCb);
+		/* Hack -- what if it's not called accept next time? */
+		if (!strcmp(text, "Accept")) {
+			printf(" [ok] ");
+			callback(user_data, i);
+			done = TRUE;
+			break;
+		}
+		//printf ("\n %s \n", text);
+	}
+	if (!done) {
+		printf (" [fail] ");
+	}
+	printf ("\n");
+	
+}
+
+static PurpleRequestUiOps purpld_request_uiops =
+{
+	NULL,		//	_request_input,
+	NULL,		// _request_choice,
+	purpld_request_action,
+	NULL,		//_request_fields,
+	NULL,		//_request_file,
+	NULL,		//_close_request,
+	NULL,		//_request_folder,
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+
 /*** Conversation uiops ***/
 static void
-null_write_conv(PurpleConversation *conv, const char *who, const char *alias,
+purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 			const char *message, PurpleMessageFlags flags, time_t mtime)
 {
 	/*
@@ -208,28 +255,29 @@ null_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 	*/
 	GList *accounts;
 	PurpleAccount *account;
-	char buf[PD_SMALL_BUFFER];
 	int n;
+	gchar *buf;
 	
 	account = purple_conversation_get_account(conv);
 
 	n = g_list_index(purple_accounts_get_all(), account);
 	
-	sprintf(buf, "%d (%s) %d %s: %s\n", n, purple_conversation_get_name(conv), mtime,
+	buf = g_strdup_printf("%d (%s) %d %s: %s\n", n, purple_conversation_get_name(conv), mtime,
 										who, message);
 	
 	purpld_inform_client(account, buf);
+	g_free(buf);
 	//ptr->lastcollect = mtime;					
 	
 }
 
-static PurpleConversationUiOps null_conv_uiops = 
+static PurpleConversationUiOps purpld_conv_uiops = 
 {
 	NULL,                      /* create_conversation  */
 	NULL,                      /* destroy_conversation */
 	NULL,                      /* write_chat           */
 	NULL,                      /* write_im             */
-	null_write_conv,           /* write_conv           */
+	purpld_write_conv,           /* write_conv           */
 	NULL,                      /* chat_add_users       */
 	NULL,                      /* chat_rename_user     */
 	NULL,                      /* chat_remove_users    */
@@ -247,21 +295,21 @@ static PurpleConversationUiOps null_conv_uiops =
 };
 #if 0
 static void
-null_ui_init(void)
+purpld_ui_init(void)
 {
 	/**
 	 * This should initialize the UI components for all the modules. Here we
 	 * just initialize the UI for conversations.
 	 */
-	purple_conversations_set_ui_ops(&null_conv_uiops);
+	purple_conversations_set_ui_ops(&purpld_conv_uiops);
 }
 
-static PurpleCoreUiOps null_core_uiops = 
+static PurpleCoreUiOps purpld_core_uiops = 
 {
 	NULL,
 	NULL,
-	null_ui_init,
-	null_ui_quit,
+	purpld_ui_init,
+	purpld_ui_quit,
 
 	/* padding */
 	NULL,
@@ -404,14 +452,15 @@ gboolean respond_generic_dummy(client* ptr, char *mesg, char **args, gpointer us
 gboolean respond_command_who(client* ptr, char *mesg, char **args, gpointer user_data) {
 	GList *iter;
 	client *cli;
-  	char buf[PD_STRING];
+  	gchar *buf;
 
 	for (iter = g_list_first(clients);iter;iter = iter->next) {
 		cli = iter->data;
-		sprintf (buf, "%10s/%s%d %s\n",	( cli->user[0] ? cli->user : "????" ), 
+		buf = g_strdup_printf ("%10s/%s%d %s\n",	( cli->user[0] ? cli->user : "????" ), 
 													( cli->conntype == CONNECTION_IRC ? "irc" : "raw" ),
 														cli->instance, inet_ntoa(cli->addr.sin_addr) );
 		purpld_client_send(ptr, buf);
+		g_free(buf);
 	}
         
 	return TRUE;
@@ -421,7 +470,12 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args, gpointer use
 	PurpleConnection *con = purple_account_get_connection(account); 
 	PurpleConversation *conv;
 
-	if (!con)		return FALSE;
+	if (!con)		{
+		gchar *error = g_strdup_printf("Failed to message \"%s\": Account %s offline\n", args[1], account->username);
+		purpld_client_send(ptr, error);
+		g_free(error);
+		return TRUE;
+	}
 /*
 	conv = purple_find_conversation_with_account( PURPLE_CONV_TYPE_IM, args[1], account );
 	if (!conv) {
@@ -453,7 +507,7 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 	PurpleAccount *account = user_data;
 	PurpleConversation *conv;
 	GList *iter1, *iter2;
-	char buf[PD_SMALL_BUFFER];	
+	gchar *buf;	
 	
 	for (iter1 = purple_get_conversations(); iter1; iter1=iter1->next) {
 		conv = iter1->data;
@@ -462,13 +516,21 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 		for(iter2 = purple_conversation_get_message_history(conv); iter2; iter2 = iter2->next) {
 			PurpleConvMessage *msg = iter2->data;
 			if (msg->when >= ptr->lastcollect) {
-				sprintf(buf, "(%s) %d %s %s\n", purple_conversation_get_name(conv),	msg->when, msg->who, msg->what);
+				buf = g_strdup_printf("(%s) %d %s %s\n", purple_conversation_get_name(conv),	msg->when, msg->who, msg->what);
 				purpld_client_send(ptr, buf);
+				g_free(buf);
 			}
 		}
 
 	}
 	ptr->lastcollect = time(NULL);
+	return TRUE;	
+}
+gboolean respond_account_delete(client* ptr, char *mesg, char **args, gpointer user_data) {
+	PurpleAccount *account = user_data;
+
+	purple_accounts_delete(account);
+
 	return TRUE;	
 }
 gboolean respond_account_enable(client* ptr, char *mesg, char **args, gpointer user_data) {
@@ -502,7 +564,7 @@ gboolean respond_account_down(client* ptr, char *mesg, char **args, gpointer use
 gboolean respond_account_set(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 	PurpleSavedStatus *status;
-	char buf[PD_STRING];
+	gchar *buf;
 	
 	if (!strcmp(args[1], "alias") || !strcmp(args[1], "name")) {
 		purple_account_set_alias (account, args[2]);
@@ -512,14 +574,21 @@ gboolean respond_account_set(client* ptr, char *mesg, char **args, gpointer user
 	} else if (!strcmp(args[1], "username") || !strcmp(args[1], "login")) {
 		purple_account_set_username (account, args[2]); 
 	} else {
-		purple_account_set_string (account, args[1], args[2]);
+		if (!strcmp(args[0], "seti")) {
+			purple_account_set_int (account, args[1], atoi(args[2]) );
+		} else if (!strcmp(args[0], "setb")) {
+			purple_account_set_bool (account, args[1], atoi(args[2]) );
+		} else {	
+			purple_account_set_string (account, args[1], args[2]);
+		}
 	}
 
 	//account = purple_account_find(username, info->id);
 	//PurpleAccount * 	purple_accounts_find (const char *name, const char *protocol)
 
-	sprintf(buf, "%s = %s \n", args[1], args[2]);
+	buf = g_strdup_printf("%s = %s \n", args[1], args[2]);
 	purpld_client_send(ptr, buf);
+	g_free(buf);
 	return TRUE;
 }
 				
@@ -554,11 +623,6 @@ gboolean respond_account_add(client* ptr, char *mesg, char **args, gpointer user
 				purple_account_set_password(account, args[3]);
 				purple_account_set_remember_password(account, TRUE);
 			}
-		
-			/* SERVER */
-			//if (hostname[0] != '-')
-			//purple_account_set_string (account, "haha", username);
-			
 		
 			/* It's necessary to enable the account first. */
 			purple_account_set_enabled(account, UI_ID, TRUE);
@@ -602,11 +666,14 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args, gpointer 
 	 };
  	static cli_len = sizeof(cli_commands) / sizeof(PurpldCommandOps);
 	static PurpldCommandOps cli_commands2[] = {
+		{ "delete",	respond_account_delete,	0 },
 	  	{ "up",		respond_account_up, 		0 },
 	  	{ "down",	respond_account_down, 	0 },
 	  	{ "enable",	respond_account_enable,	0 },
 	  	{ "disable",respond_account_disable,0 },
 		{ "set", 	respond_account_set, 	0 },
+		{ "seti", 	respond_account_set, 	0 },
+		{ "setb", 	respond_account_set, 	0 },
 		{ "send",	respond_account_send,	3 },
 		{ "check",	respond_account_check,	0 },
 		{ "collect",respond_account_collect,0 },
@@ -622,21 +689,23 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args, gpointer 
 		int id, n, off = 0;
 		GList *iter = purple_accounts_get_all();
 		PurpleAccount *account = NULL;
-		char msg[PD_STRING];
+		gchar *msg;
 		if (sscanf(args[1], "%d", &id) == 1) {
 			off = (int)(id / 10)+1;
 			account = g_list_nth_data(iter, id);
 		} else if ((n = strpos(args[1], ' ')) != -1) {
 			GList *find;
 			char buf[PD_TINY_STRING];
+			bzero(buf, PD_TINY_STRING);
 			strncpy(buf, args[1], n);
 			off = strlen(buf);
-			if (find = g_list_find_custom( iter, buf, find_account ))
-				account = find->data;
+			find = g_list_find_custom( iter, buf, find_account );
+			if (find) account = find->data;
 		}
 		if (!account) {
-			sprintf(msg, "Bad command or account name \"%s\" \n", args[1]);
+			msg = g_strdup_printf("Bad command or account name \"%s\" \n", args[1]);
 			purpld_client_send(ptr, msg);
+			g_free(msg);
 			return TRUE;
 		}
 
@@ -679,13 +748,14 @@ void client_command(client* ptr, char *mesg) {
 
 void purpld_client_send(client* ptr, const char *mesg) {
 	if (ptr->conntype == CONNECTION_IRC) {
-		char buf[PD_LARGE_BUFFER];
+		gchar *buf;
 		if (!ptr->auth)
-			sprintf(buf, "NOTICE AUTH :%s", mesg);
+			buf = g_strdup_printf("NOTICE AUTH :%s", mesg);
 		else 
-			sprintf(buf, ":daemon!daemon@%s PRIVMSG &root :%s", ptr->server, mesg);
+			buf = g_strdup_printf(":daemon!daemon@%s PRIVMSG &root :%s", ptr->server, mesg);
 			
 		send(ptr->connfd, buf, strlen(buf), 0);
+		g_free(buf);
 	}
 	else
 		send(ptr->connfd, mesg, strlen(mesg), 0);
@@ -958,11 +1028,11 @@ int init_libpurple() {
 
 	gchar *path;
 	if (id == 0) {
-		path = g_build_filename("usr", "local", "etc", "pupled", NULL);
-	} else if (!strcmp(passwd->pw_gecos, "purpled")) {
+		path = g_build_filename("usr", "local", "etc", UI_ID, NULL);
+	} else if (!strcmp(passwd->pw_gecos, UI_ID)) {
 		path = g_build_filename(passwd->pw_dir, NULL);	
 	} else {
-		path = g_build_filename(passwd->pw_dir, "purpled", NULL);
+		path = g_build_filename(passwd->pw_dir, UI_ID, NULL);
 	}
 
 	purple_util_set_user_dir(path);
@@ -982,10 +1052,10 @@ int init_libpurple() {
 	 * 	- initialize the ui components for all the modules.
 	 * 	- uninitialize the ui components for all the modules when the core terminates.
 	 */
-//	purple_core_set_ui_ops(&null_core_uiops);
-	purple_conversations_set_ui_ops(&null_conv_uiops);
-	
-	purple_notify_set_ui_ops(&null_notify_uiops);
+//	purple_core_set_ui_ops(&purpld_core_uiops);
+	purple_conversations_set_ui_ops(&purpld_conv_uiops);
+	purple_notify_set_ui_ops(&purpld_notify_uiops);
+	purple_request_set_ui_ops(&purpld_request_uiops);
 
 	/* Set the uiops for the eventloop. If your client is glib-based, you can safely
 	 * copy this verbatim. */
