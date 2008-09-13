@@ -4,6 +4,7 @@
 #define CONNECTION_RAW		1
 #define CONNECTION_TELNET	2
 #define CONNECTION_IRC		3
+#define CONNECTION_HTTP 	4
 
 #define PD_LARGE_BUFFER 	4096
 #define PD_SMALL_BUFFER 	1024
@@ -18,13 +19,15 @@ struct client {
 	time_t 	lastcollect;
 	int 		conntype;
 	char 		buffer[PD_LARGE_BUFFER];
-	int 		instance;	
+	int 		instance;
+	int		content_length;
 	char 		name[PD_TINY_STRING];
 	char 		user[PD_TINY_STRING];
 	char 		server[PD_SMALL_STRING];
 	char 		host[PD_SMALL_STRING];
 	char 		pass[PD_SMALL_STRING];
 	gboolean auth;
+	gboolean kill;
 };
 
 typedef gboolean (*command_cb) (client *ptr, char *mesg, char **args, gpointer user_data);
