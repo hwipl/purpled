@@ -37,3 +37,11 @@ typedef struct PurpldCommandOps {
 	command_cb	call_back;
 	int 			max;
 } PurpldCommandOps;
+
+//typedef struct purpld_dirs purpld_dirs; 
+struct purpld_dirs {
+	gchar *home_dir;
+	gchar *log_file;
+	gchar *pid_file;
+	gchar *file_dir;
+};
