@@ -579,6 +579,47 @@ gboolean respond_command_who(client* ptr, char *mesg, char **args, gpointer user
         
 	return TRUE;
 }
+gboolean respond_account_join(client* ptr, char *mesg, char **args, gpointer user_data) {
+	PurpleAccount *account = user_data;
+	PurpleChat *chat;
+	
+	GHashTable *comps = NULL;
+	PurpleConnection *con = purple_account_get_connection(account);
+	PurplePluginProtocolInfo *info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_connection_get_prpl(con));
+	if (info->chat_info_defaults != NULL)
+		comps = info->chat_info_defaults(con, args[1]);	
+
+	chat = purple_blist_find_chat(account, args[1]);
+	if (!chat) {
+		chat = purple_chat_new(account, args[1], comps);
+		purple_blist_add_chat(chat, NULL, NULL);
+	}	else {
+		comps = 	purple_chat_get_components(chat);
+		/*GList *keys = g_hash_table_get_keys(comps);
+		for (; keys; keys = keys->next) {
+		 printf("%s \n", keys->data);
+		}*/
+	}
+	serv_join_chat(con, comps);
+	//if (comps != NULL)
+		//g_hash_table_destroy(comps);
+}
+gboolean respond_account_part(client* ptr, char *mesg, char **args, gpointer user_data) {
+	PurpleAccount *account = user_data;
+	PurpleConnection *con = purple_account_get_connection(account);
+	PurpleChat *chat = NULL;
+	PurpleConversation *conv = NULL;
+	
+	chat = purple_blist_find_chat(account, args[1]);
+	if (chat) {
+	 	purple_blist_remove_chat(chat);
+	}
+	
+	conv = purple_find_conversation_with_account( PURPLE_CONV_TYPE_CHAT, args[1], account );	
+	if (conv) {
+		purple_conversation_destroy(conv);
+	}
+}
 gboolean respond_account_send(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 	PurpleConnection *con = purple_account_get_connection(account); 
@@ -824,6 +865,8 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args, gpointer 
 		{ "seti", 	respond_account_set, 	0 },
 		{ "setb", 	respond_account_set, 	0 },
 		{ "send",	respond_account_send,	3 },
+		{ "join",	respond_account_join,	0 },
+		{ "part",	respond_account_part,	0 },
 		{ "check",	respond_account_check,	0 },
 		{ "collect",respond_account_collect,0 },
 	 };
@@ -1051,11 +1094,31 @@ static gboolean purpld_accept_client(GIOChannel *src, GIOCondition condition, gp
 	return TRUE;	
 }
 
+static gboolean
+auto_join_chats(gpointer data)
+{
+	PurpleBlistNode *node;
+	PurpleConnection *pc = data;
+	PurpleAccount *account = purple_connection_get_account(pc);
+
+	for (node = purple_blist_get_root(); node;
+			node = purple_blist_node_next(node, FALSE)) {
+		if (PURPLE_BLIST_NODE_IS_CHAT(node)) {
+			PurpleChat *chat = (PurpleChat*)node;
+			if (purple_chat_get_account(chat) == account/* &&
+					purple_blist_node_get_bool(node, "gnt-autojoin")*/)
+				serv_join_chat(purple_account_get_connection(account), purple_chat_get_components(chat));
+		}
+	}
+	return FALSE;
+}
+
 static void
 signed_on(PurpleConnection *gc, gpointer null)
 {
 	PurpleAccount *account = purple_connection_get_account(gc);
 	printf("Account connected: %s %s\n", account->username, account->protocol_id);
+	g_idle_add(auto_join_chats, gc);	
 }
 static void
 signed_off(PurpleConnection *gc, gpointer null)
@@ -1097,6 +1160,8 @@ handle_server_signals(int sig)
 			fclose(stdout);
 			fclose(stderr);		
 		
+			//g_main_loop_quit (0);
+			uninit_path();
 			exit(EXIT_SUCCESS);
 	}
 }
