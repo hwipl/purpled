@@ -148,7 +148,7 @@ void purpld_inform_client(PurpleAccount *account, char *message) {
 }
 
 /*** Account uiops ***/
-static void* purpled_accounts_request_authorize 
+static void* purpld_accounts_request_authorize 
 (PurpleAccount *account, const char *remote_user, const char *id, const char *alias, const char *message, gboolean on_list,
  PurpleAccountRequestAuthorizationCb authorize_cb, PurpleAccountRequestAuthorizationCb deny_cb, void *user_data) 
 {
@@ -158,8 +158,8 @@ static PurpleAccountUiOps purpld_accounts_uiops =
 {
 	NULL, //notify_added
 	NULL, //status changed
-	NULL, //request_add
-	purpled_accounts_request_authorize,
+	NULL, //request_add,
+	purpld_accounts_request_authorize,
 	NULL, //close_account_request
 	NULL,
 	NULL,
@@ -173,7 +173,7 @@ static void *
 purpld_notify_message(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary)
 {
 	char mes[PD_STRING];
-	sprintf(mes, "%s %s", primary, secondary);
+	sprintf(mes, "%s %s %s \n", title, primary, secondary);
 	purpld_inform_client( 0, mes );	
 }
 #endif
@@ -253,6 +253,22 @@ purpld_request_file(const char *title, const char *filename,
 	g_free(dir);
 }
 static void*
+purpld_request_input (const char *title, const char *primary,
+		const char *secondary, const char *default_value,
+		gboolean multiline, gboolean masked, gchar *hint,
+		const char *ok_text, GCallback ok_cb,
+		const char *cancel_text, GCallback cancel_cb,
+		PurpleAccount *account, const char *who, PurpleConversation *conv,
+		void *user_data)
+{
+
+	printf("libpurple input request: \"%s - %s - %s - %s\"\n", title, primary, secondary, default_value);
+	
+	PurpleRequestInputCb callback = (PurpleRequestInputCb)ok_cb;
+	callback(user_data, default_value);
+
+}
+static void*
 purpld_request_action(const char *title, const char *primary,
 		const char *secondary, int default_value,
 		PurpleAccount *account, const char *who, PurpleConversation *conv,
@@ -269,7 +285,7 @@ purpld_request_action(const char *title, const char *primary,
 		PurpleRequestActionCb callback = va_arg(actions, PurpleRequestActionCb);
 		/* Hack -- what if it's not called accept next time? */
 		if (!strcmp(text, "Accept") || !strcmp(text, "_Accept") || !strcmp(text, "Yes") || !strcmp(text, "_Yes")) {
-			printf(" [ok] ");
+			printf(" [ok] \n");
 			callback(user_data, i);
 			done = TRUE;
 			break;
@@ -277,15 +293,14 @@ purpld_request_action(const char *title, const char *primary,
 		//printf ("\n %s \n", text);
 	}
 	if (!done) {
-		printf (" [fail] ");
+		printf (" [fail] \n");
 	}
-	printf ("\n");
 	
 }
 
 static PurpleRequestUiOps purpld_request_uiops =
 {
-	NULL,		//	_request_input,
+	purpld_request_input,
 	NULL,		// _request_choice,
 	purpld_request_action,
 	NULL,		//_request_fields,
@@ -562,6 +577,17 @@ gboolean respond_generic_dummy(client* ptr, char *mesg, char **args, gpointer us
 	return TRUE;
 }
 
+gboolean respond_command_ver(client* ptr, char *mesg, char **args, gpointer user_data) {
+  	gchar *buf;
+
+	buf = g_strdup_printf ("purpled %d.%d.%d/%c, libpurple %d.%d.%d\n",
+		PURPLED_VERSION_MAJOR, PURPLED_VERSION_MINOR, PURPLED_VERSION_MICRO, PURPLED_VERSION_STATE,
+		PURPLE_MAJOR_VERSION, PURPLE_MINOR_VERSION,	PURPLE_MICRO_VERSION);
+		
+	purpld_client_send(ptr, buf);
+	g_free(buf);
+	return TRUE;
+}
 gboolean respond_command_who(client* ptr, char *mesg, char **args, gpointer user_data) {
 	GList *iter;
 	client *cli;
@@ -620,6 +646,23 @@ gboolean respond_account_part(client* ptr, char *mesg, char **args, gpointer use
 		purple_conversation_destroy(conv);
 	}
 }
+gboolean respond_account_forget(client* ptr, char *mesg, char **args, gpointer user_data) {
+	PurpleAccount *account = user_data;
+	PurpleConnection *con = purple_account_get_connection(account); 
+	PurpleBuddy *buddy;
+	PurpleGroup *grp = NULL;
+
+	if (!con || purple_account_is_connecting(account))		{
+		return TRUE;
+	}
+	
+	buddy = purple_find_buddy(account,	args[1]);		
+	if (buddy) {
+		grp = purple_buddy_get_group(buddy);
+		purple_account_remove_buddy(account, buddy, grp);
+		purple_blist_remove_buddy(buddy);
+	}
+}
 gboolean respond_account_send(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 	PurpleConnection *con = purple_account_get_connection(account); 
@@ -643,17 +686,15 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args, gpointer use
 	}
 #endif
 #if 1
-	buddy = purple_find_buddy(account,	args[1]);	 
+	buddy = purple_find_buddy(account,	args[1]);
 	if (!buddy) {
-		buddy = purple_buddy_new(account, args[1], args[1]);
+		buddy = purple_buddy_new(account, args[1], NULL);
 		purple_blist_add_buddy(buddy, NULL, NULL, NULL);
-	}
-	if (!buddy) {
-		printf ("No buddy ! \n");
+		purple_account_add_buddy(account, buddy);
 	}
 #endif 
 	PurpleMessageFlags flags = PURPLE_MESSAGE_SEND ; 
-	time_t mtime = time(NULL);	 
+	//time_t mtime = time(NULL);
 
 	serv_send_im (con, args[1], args[2], flags);
 
@@ -867,6 +908,7 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args, gpointer 
 		{ "send",	respond_account_send,	3 },
 		{ "join",	respond_account_join,	0 },
 		{ "part",	respond_account_part,	0 },
+		{ "forget",	respond_account_forget,	0 },
 		{ "check",	respond_account_check,	0 },
 		{ "collect",respond_account_collect,0 },
 	 };
@@ -924,6 +966,7 @@ void client_command(client* ptr, char *mesg) {
 		
 	  	{ "account", respond_process_account, 2 }, 
 	  	{ "acc", respond_process_account, 2 }, //acc - shorthand for account
+	  	{ "ver", respond_command_ver,	0 },
 	  	{ "who", respond_command_who, 0 }
 	 };
  	static int cli_len = sizeof(cli_commands) / sizeof(PurpldCommandOps);
