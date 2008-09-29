@@ -1,7 +1,7 @@
 #define UI_ID                  "purpled"
 #define PURPLED_VERSION_MAJOR		0
 #define PURPLED_VERSION_MINOR		0
-#define PURPLED_VERSION_MICRO		7
+#define PURPLED_VERSION_MICRO		8
 #define PURPLED_VERSION_STATE		'p'
  
 #define CONNECTION_UNKNOWN	0
