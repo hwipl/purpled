@@ -612,6 +612,9 @@ gboolean respond_account_join(client* ptr, char *mesg, char **args, gpointer use
 	GHashTable *comps = NULL;
 	PurpleConnection *con = purple_account_get_connection(account);
 	PurplePluginProtocolInfo *info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_connection_get_prpl(con));
+	
+	if (!purple_account_is_connected(account)) return TRUE;	
+	
 	if (info->chat_info_defaults != NULL)
 		comps = info->chat_info_defaults(con, args[1]);	
 
@@ -629,6 +632,7 @@ gboolean respond_account_join(client* ptr, char *mesg, char **args, gpointer use
 	serv_join_chat(con, comps);
 	//if (comps != NULL)
 		//g_hash_table_destroy(comps);
+	return TRUE;
 }
 gboolean respond_account_part(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
@@ -645,6 +649,7 @@ gboolean respond_account_part(client* ptr, char *mesg, char **args, gpointer use
 	if (conv) {
 		purple_conversation_destroy(conv);
 	}
+	return TRUE;
 }
 gboolean respond_account_forget(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
@@ -662,11 +667,12 @@ gboolean respond_account_forget(client* ptr, char *mesg, char **args, gpointer u
 		purple_account_remove_buddy(account, buddy, grp);
 		purple_blist_remove_buddy(buddy);
 	}
+	return TRUE;
 }
 gboolean respond_account_send(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 	PurpleConnection *con = purple_account_get_connection(account); 
-	PurpleConversation *conv;
+	PurpleConversation *conv = NULL;
 	PurpleBuddy *buddy;
 	
 	if (!con || purple_account_is_connecting(account))		{
@@ -676,31 +682,32 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args, gpointer use
 		return TRUE;
 	}
 	
-	
-#if 0
-	conv = purple_find_conversation_with_account( PURPLE_CONV_TYPE_IM, args[1], account );
-	if (!conv) {
-		conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, args[1]);
+	if (purple_account_get_ui_bool(account, UI_ID, "log_self", FALSE)) {
+		conv = purple_find_conversation_with_account( PURPLE_CONV_TYPE_IM, args[1], account );
 		if (!conv)
-			return FALSE;
+			conv = purple_find_conversation_with_account( PURPLE_CONV_TYPE_ANY, args[1], account );
+		if (!conv)
+			conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, args[1]);
 	}
-#endif
-#if 1
-	buddy = purple_find_buddy(account,	args[1]);
-	if (!buddy) {
-		buddy = purple_buddy_new(account, args[1], NULL);
-		purple_blist_add_buddy(buddy, NULL, NULL, NULL);
-		purple_account_add_buddy(account, buddy);
+
+	if (purple_account_get_ui_bool(account, UI_ID, "add_buddy_on_send", TRUE)) {
+		buddy = purple_find_buddy(account,	args[1]);
+		if (!buddy) {
+			buddy = purple_buddy_new(account, args[1], NULL);
+			purple_blist_add_buddy(buddy, NULL, NULL, NULL);
+			purple_account_add_buddy(account, buddy);
+		}
 	}
-#endif 
+ 
 	PurpleMessageFlags flags = PURPLE_MESSAGE_SEND ; 
-	//time_t mtime = time(NULL);
+	time_t mtime = time(NULL);
 
 	serv_send_im (con, args[1], args[2], flags);
 
 	//purple_conv_im_write 	(	 conv, args[1],  args[2], flags, mtime );
-	//	purple_conversation_present(conv);
-	//	purple_conversation_write 	(	 conv, args[1], args[2], flags, mtime );
+	//purple_conversation_present(conv);
+	if (conv)
+		purple_conversation_write 	(	 conv, args[1], args[2], flags, mtime );
 
 	return TRUE; 
 }
@@ -792,7 +799,16 @@ gboolean respond_account_set(client* ptr, char *mesg, char **args, gpointer user
 	gchar *buf;
 	gchar extra = '*';	
 	
-	if (!strcmp(args[1], "alias") || !strcmp(args[1], "name")) {
+	if (!strcmp(args[0], "useti")) {
+		extra = 'U';
+		purple_account_set_ui_int (account, UI_ID, args[1], atoi(args[2]) );
+	} else if (!strcmp(args[0], "usetb")) {
+		extra = 'U';
+		purple_account_set_ui_bool (account, UI_ID, args[1], atoi(args[2]) );
+	} else if (!strcmp(args[0], "uset")) {
+		extra = 'U';
+		purple_account_set_ui_string (account, UI_ID, args[1], args[2]);
+	} else if (!strcmp(args[1], "alias") || !strcmp(args[1], "name")) {
 		purple_account_set_alias(account, args[2]);
 	} else if (!strcmp(args[1], "password") || !strcmp(args[1], "pass")) {
 		purple_account_set_password(account, args[2]);
@@ -902,9 +918,14 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args, gpointer 
 	  	{ "down",	respond_account_down, 	0 },
 	  	{ "enable",	respond_account_enable,	0 },
 	  	{ "disable",respond_account_disable,0 },
+	  	/* Set */
 		{ "set", 	respond_account_set, 	0 },
 		{ "seti", 	respond_account_set, 	0 },
 		{ "setb", 	respond_account_set, 	0 },
+		{ "uset", 	respond_account_set, 	0 },
+		{ "useti", 	respond_account_set, 	0 },
+		{ "usetb", 	respond_account_set, 	0 },
+		/* End Set */
 		{ "send",	respond_account_send,	3 },
 		{ "join",	respond_account_join,	0 },
 		{ "part",	respond_account_part,	0 },
@@ -1156,6 +1177,18 @@ auto_join_chats(gpointer data)
 	return FALSE;
 }
 
+static gboolean
+auto_reconnect(gpointer data)
+{
+	PurpleConnection *pc = data;
+	PurpleAccount *account = purple_connection_get_account(pc);
+
+	if (purple_account_get_enabled(account, UI_ID))
+		purple_account_set_status(account, "available", TRUE, 0);
+
+	return FALSE;
+}
+
 static void
 signed_on(PurpleConnection *gc, gpointer null)
 {
@@ -1167,9 +1200,11 @@ static void
 signed_off(PurpleConnection *gc, gpointer null)
 {
 	PurpleAccount *account = purple_connection_get_account(gc);
-	const PurpleConnectionErrorInfo *err = purple_account_get_current_error(account); 
+	const PurpleConnectionErrorInfo *err = purple_account_get_current_error(account);
+	int recon = purple_account_get_ui_int(account, UI_ID, "reconnect_timeout", 0)*60; 
 	printf("Account %s disconnected: %s %s\n", (!err ? "happily" : "unhappily"), account->username, account->protocol_id);
 	if (err) printf("%d %s\n", err->type, err->description);
+	if (err && recon) g_timeout_add(recon, auto_reconnect, gc);
 }
 
 static void

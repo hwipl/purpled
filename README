@@ -18,16 +18,16 @@ $ telnet localhost 32000
 Buffering is implemented, so access over internet would probably
 work.
 
-Caution: anyone can login to your purpled! It's not protected at all!
+CAUTION: anyone can login to your purpled! It's not protected at all!
 Use iptables to disable remote access!
 
 ##
 ## IRC or HTTP
 #
 
-purpleD supports some simplified connection wrappers
-for easy access with IRC and HTTP clients. I tried
-irssi and X-Chat for irc; Opera and wget for web.
+purpleD supports some simplified connection wrappers for easy access with
+IRC and HTTP clients. I tried irssi and X-Chat for irc; Opera and wget for 
+web.
 
 address: localhost 
 port: 32000
@@ -53,6 +53,10 @@ of connections stay online until you close the socket.
 
 All commands are separated by LF. It is OK to separate them with CRLF,
 in which case CR will be striped.
+
+ver
+
+    Output current purpled and libpurple versions.
 
 who
 
@@ -101,10 +105,30 @@ account
 	
 	    Set an account setting.
 	    Note: those settings have special values: "alias", "username", 
-	    "password"
+	    "password".
 	    Note: by setting alias you can refer to an account with it after-
 	    wards.
+	    Note: "encoding" is a very popular setting.
 	    
+	account ID uset SETTING VALUE
+	
+	    Set an internal purpled setting to fine-tune account behaviour.
+	    Current possible settings are:
+		
+	    (type) (name)		(default)
+	    bool log_self		FALSE		write own messages for 
+							later collect. 
+	    bool add_buddy_on_send 	TRUE		try to add buddy when 
+							messaging him.
+	    int  reconnect_timeout	0		reconnect in how many 
+							seconds on error.
+							0 to disable.
+		
+	    Note: both "set" and "uset" commands may vary as "set", "seti",
+	    "setb", "uset", "useti", "usetb". -i variants are for integers,
+	    -b are for booleans. Default setting type is string.
+	    For boolean values use 1 or 0.
+		
 	account ID delete
 	
 	    Permamently delete an account.
@@ -113,6 +137,22 @@ account
 	
 	    Sends Instant Message to specified user. 
 	    Note: please provide sufficient username!
+	    
+	account ID check USERNAME
+	
+	    Output availible userinfo.
+	    
+	account ID forget USERNAME
+
+	    Remove specified user from buddy list if it existed.
+	    
+	account ID join CHAT
+	
+	    Join chat.
+		
+	account ID part CHAT
+	
+	    Leave chat.
 	
 	account ID collect [TIME]
 	
