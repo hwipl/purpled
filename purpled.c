@@ -428,8 +428,9 @@ static gint find_account(gconstpointer a, gconstpointer b) {
 }
 
 static gint find_client(gconstpointer a, gconstpointer b) {
+	int* connfd2 = (int*) b;
 	client *cli = (client *)a;
-	if (cli->connfd == (int)b) return 0;
+	if (cli->connfd == *connfd2) return 0;
 	return 1;
 }
 
@@ -782,14 +783,14 @@ gboolean respond_account_disable(client* ptr, char *mesg, char **args, gpointer 
 gboolean respond_account_up(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 
-	purple_account_set_status(account, "available", TRUE, 0);
+	purple_account_set_status(account, "available", TRUE, 0, NULL);
 
 	return TRUE;	
 }
 gboolean respond_account_down(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 
-	purple_account_set_status(account, "offline", TRUE, 0);
+	purple_account_set_status(account, "offline", TRUE, 0, NULL);
 
 	return TRUE;	
 }
@@ -1090,7 +1091,7 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition, gp
 	
 	char tmp[PD_TINY_STRING];	
    
-   client *client_ptr = (g_list_find_custom( clients, (int*) connfd, find_client ))->data;
+   client *client_ptr = (g_list_find_custom( clients, &connfd, find_client ))->data;
    if (!client_ptr) {
    	printf("Fatal Error: Client not found while handling client \n");
    	exit;
@@ -1184,7 +1185,7 @@ auto_reconnect(gpointer data)
 	PurpleAccount *account = purple_connection_get_account(pc);
 
 	if (purple_account_get_enabled(account, UI_ID))
-		purple_account_set_status(account, "available", TRUE, 0);
+		purple_account_set_status(account, "available", TRUE, 0, NULL);
 
 	return FALSE;
 }
