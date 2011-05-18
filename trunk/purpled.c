@@ -1271,21 +1271,74 @@ void daemonize() {
 
 int main(int argc, char *argv[])
 {
+	char *param;
+	gboolean run_as_daemon = TRUE;
+	in_port_t listen_port;
+	struct in_addr listen_addr;
+	int i;
+
+	run_as_daemon = FALSE;
+	listen_port = htons (32000);
+	listen_addr.s_addr = htonl (INADDR_ANY);
+	for (i = 1; i < argc; i++)
+	{
+		param = argv[i];
+		if (param[0] == '-')
+		{
+			if (param[1] == 'd')
+			{
+				run_as_daemon = TRUE;
+			}
+			else if (param[1] == 'l')
+			{
+				if (!inet_aton (&param[2], &listen_addr))
+				{
+					fprintf(stderr, "invalid listen address: %s\n", &param[2]);
+					return (EXIT_FAILURE);
+				}
+			}
+			else if (param[1] == 'p')
+			{
+				int port;
+				port = atoi (&param[2]);
+				if ((port <= 1) || (port > 66536))
+				{
+					fprintf(stderr, "invalid listen port: %s\n", &param[2]);
+					return (EXIT_FAILURE);
+				}
+				else
+				{
+					listen_port = htons ((short) port);
+				}
+			}
+			else
+			{
+				fprintf(stderr, "unknown parameter: %s\n", param);
+				return (EXIT_FAILURE);
+			}
+		}
+		else
+		{
+			fprintf(stderr, "invalid parameter: %s\n", param);
+			return (EXIT_FAILURE);
+		}
+	}
 	/* Bye-bye terminal */
-	daemonize();
+	if (run_as_daemon)
+		daemonize();
 
 	/* Look around */
 	init_paths();
 
-	/* Handle signals */	
+	/* Handle signals */
 	signal(SIGINT, handle_server_signals);
-  	signal(SIGTERM, handle_server_signals);
+	signal(SIGTERM, handle_server_signals);
 
 	/* Program name */
 	g_set_prgname("purpleD");
-	
+
 	/* Init server part */
-	init_server();
+	init_server(listen_port, listen_addr);
 
 	/* Init client(s) part */
 	init_libpurple();
@@ -1369,7 +1422,7 @@ int init_paths() {
 */
 }
 
-int init_server() {
+void init_server(in_port_t listen_port, struct in_addr listen_addr) {
    int on = 1;
 	struct sockaddr_in servaddr;
 
@@ -1380,8 +1433,8 @@ int init_server() {
 	
    bzero(&servaddr,sizeof(servaddr));
    servaddr.sin_family = AF_INET;
-   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-   servaddr.sin_port = htons(32000);
+   servaddr.sin_addr = listen_addr;
+   servaddr.sin_port = listen_port;
    
    if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
    	perror("Bind Failed");
