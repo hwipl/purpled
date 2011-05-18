@@ -71,6 +71,27 @@ there are indeed other users on the machine):
 Should purpled be running under root?
     As far as I can tell: NO! NO! NO!
 
+
+###
+### RUN
+###
+
+Synopsis:
+  purpled [-d] [-pPORT] [-lLISTEN_IP]
+
+Options:
+  -d             run purpled a unix daemon
+  -pPORT         specify on which TCP port purpled listen. Default: 32000
+  -lLISTEN_IP    specify on which IP address purpled listen. Default: any 0.0.0.0
+
+Examples:
+  purpled, listen on port 4242 and stay in the terminal.
+      $ purple -p4242
+
+  purpled, listen on IP address 127.0.0.1 and start as a deamon.
+      $ purple -l127.0.0.1 -d
+
+
 ###
 ### INIT SCRIPTS
 ###
