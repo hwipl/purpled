@@ -1,0 +1,119 @@
+#!/bin/sh
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
+# limitations under the License.
+#
+#
+# purpled        Startup script for purpled
+#
+# chkconfig: - 85 15
+# description: purpled is a libpurple daemon, aimed to provide instant-messaging services to external applications
+# processname: purpled
+# pidfile: /var/log/purpled/purpled.pid
+# config: /etc/sysconfig/purpled
+#
+### BEGIN INIT INFO
+# Provides: purpled
+# Required-Start: $local_fs $remote_fs $network $named
+# Required-Stop: $local_fs $remote_fs $network
+# Should-Start: distcache
+# Short-Description: start and stop purpled
+# Description: purpled is a libpurple daemon, aimed to provide instant-messaging services to external applications
+### END INIT INFO
+
+#purpled=/usr/sbin/purpled
+#pidfile=/var/run/purpled.pid
+#logfile=/var/log/purpled.log
+
+purpled=./purpled
+pidfile=./purpled.pid
+logfile=./purpled.log
+
+listen_port=5999
+listen_ip=127.0.0.1
+
+RETVAL=0
+
+start() {
+	istarted
+	RETVAL=$?
+	[ $RETVAL = 0 ] && echo "purpled is already running" && return $RETVAL
+	echo "Starting purpled"
+	nohup $purpled -p$listen_port -l$listen_ip 2>&1 >$logfile &
+	RETVAL=$?
+	PID=$!
+	echo $PID > $pidfile
+	return $RETVAL
+}
+
+stop() {
+	istarted
+	RETVAL=$?
+	[ $RETVAL != 0 ] && echo "purpled is not running" && return $RETVAL
+	PID=$(cat $pidfile)
+	echo "Stopping purpled"
+	kill -s TERM $PID
+	RETVAL=$?
+	[ $RETVAL = 0 ] && rm -f ${pidfile}
+	return $RETVAL
+}
+
+restart() {
+	stop
+	start
+}
+
+istarted() {
+	if [ ! -f ${pidfile} ] ; then
+		RETVAL=3
+	else
+		PID=$(cat $pidfile)
+		kill -s WINCH $PID
+		RETVAL=$?
+		[ $RETVAL != 0 ] && rm -f ${pidfile}
+	fi
+	return $RETVAL
+}
+
+status() {
+	istarted
+	if [ $RETVAL = 0 ] ; then
+		echo purpled is running
+	else
+		echo purpled is stopped
+	fi
+	return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+	status
+		;;
+  restart)
+	restart
+	;;
+  *)
+	echo $"Usage: $prog {start|stop|restart|status}"
+	exit 1
+esac
+
+exit $RETVAL
