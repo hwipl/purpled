@@ -1,5 +1,5 @@
 
-Note: purpled is not even alpha. Alot of stuff is undecided yet. This file
+Note: purpled is alpha. Alot of stuff is undecided yet. This file
 provides not a release-grade information, but some hints on how to get
 this dirty source working. 
 
@@ -16,40 +16,18 @@ this dirty source working.
 
 Install libpurple from ports (I found it in /usr/ports/net-im/libpurple)
 
-$ cp Makefile.BSD Makefile
-$ make
+$ gmake check_deps
+$ gmake
 
 
 ##
-## Using automake
+## linux
 #
 
-Copy aclocal.m4 and acinclude.m4 from pidgin source distribution.
+Install libpurple and glib-2.0 development headers
 
-Now you can just:
-
-$ autoconf
-$ ./configure
+$ make check_deps
 $ make
-
-##
-## Edit makefile
-#
-
-Do we really need autoconf to find 2 libraries?
-
-Perhaps one can get away by just editing the Makefile. 
-All it needs are header paths for glib and libpurple.
-
-$ vi Makefile
-$ make
-
-##
-## Why so incosistent?
-#
-
-As many things with purpled, that was left undecided and can go
-both ways from here. Uh oh. 
 
 
 ###
@@ -58,9 +36,8 @@ both ways from here. Uh oh.
 
 So where should you put purpled? Another good question I don't have
 answer for. Well, 1 idea would be to use
-/usr/local/bin 		-- for binary
-/usr/local/etc/purpled  -- for config
-/var/log/purpled.log	-- log file
+/usr/local/bin		-- for binary
+/etc/init.d 		-- for init script
 
 But, some people prefer to run things this way (especialy where 
 there are indeed other users on the machine):
@@ -96,4 +73,18 @@ Examples:
 ### INIT SCRIPTS
 ###
 
-No init scripts are available at the moment. Sorry :(
+Synopsis:
+    purpled.init start|stop|restart|status
+
+examples:
+$ purpled.init start
+$ purpled.init stop
+
+you may need to change the 5 variables at the begining.
+
+purpled=./purpled			# where the purpled binary is located
+pidfile=./purpled.pid		# where the pid is stored
+logfile=./purpled.log		# where logs are stored
+
+listen_port=5999			# param given to the -p option
+listen_ip=127.0.0.1			# param given to the -l option
