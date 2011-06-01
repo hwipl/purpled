@@ -40,6 +40,11 @@ $(OUT)  : $(OBJ)
 
 all     : $(OUT)
 
+check_deps :
+	pkg-config --cflags glib-2.0
+	pkg-config --cflags   ppppurple
+	@echo "- depandancies OK"
+
 clean   :
 	@echo "- cleaning objects directory"
 	$(RM) $(addprefix $(OBJDIR), $(OBJ))

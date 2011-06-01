@@ -51,7 +51,7 @@ start() {
 	RETVAL=$?
 	[ $RETVAL = 0 ] && echo "purpled is already running" && return $RETVAL
 	echo "Starting purpled"
-	nohup $purpled -p$listen_port -l$listen_ip 2>&1 >$logfile &
+	nohup $purpled -p$listen_port -l$listen_ip 2>&1 >>$logfile &
 	RETVAL=$?
 	PID=$!
 	echo $PID > $pidfile
