@@ -1,0 +1,218 @@
+.TH PURPLED 8 LOCAL
+
+.SH NAME
+
+purpled - a libpurple daemon.
+
+.SH SYNOPSIS
+
+.B purpled
+.I
+[-d] [-pPORT] [-lLISTEN_IP]
+
+
+
+.SH AVAILABILITY
+
+All UNIX flavors
+
+.SH DESCRIPTION
+
+purpled is a libpurple daemon, aimed to provide instant-messaging services to external applications
+
+.SH OPTIONS
+
+.TP 5
+
+.B -d
+
+run purpled a unix daemon
+
+.TP
+
+.B -pPORT
+specify on which TCP port purpled listen.
+
+.br
+
+Default: 32000
+
+.TP
+
+.B -lLISTEN_IP
+specify on which IP address purpled listen.
+
+.br
+
+Default: any 0.0.0.0
+
+.SH EXAMPLES
+
+purpled, listen on port 4242 and stay in the terminal.
+
+.HP
+
+$ purple -p4242
+
+purpled, listen on IP address 127.0.0.1 and start as a deamon.
+
+.HP
+
+$ purple -l127.0.0.1 -d
+
+.SH COMMANDS
+
+All commands are separated by LF. It is OK to separate them with CRLF,
+in which case CR will be striped.
+
+-TP 2
+
+.B ver
+
+Output current purpled and libpurple versions.
+
+.TP
+
+.B who
+
+Returns the list of clients connected to the daemon
+
+.TP
+
+.B account
+
+Multi-purpose command with several meanings. You can use
+"acc" as an alias.
+
+.TP
+
+.B account add PROTOCOL USERNAME PASSWORD
+
+Note: protocol name is specified like this: "msn", "icq", "xmpp".
+Note: username must often include server address too!
+
+.TP
+
+.B account list
+
+Lists all accounts and their states.
+
+.TP
+
+.B accound ID
+
+Multi-purpose command to perform an operation on an account.
+ID either specifies index number from "account list" output,
+either an alias assigned with "account ID set alias ALIAS"
+command.
+Note: if several accounts share an alias, one with the lowest
+index number will be selected, and the others - neglected.
+
+.TP
+
+.B account ID up
+
+Go online.
+
+.TP
+
+.B account ID down
+
+Go offline.
+
+.TP
+
+.B account ID disable.
+
+Disable an account.
+
+.TP
+
+.B account ID enable.
+
+Enable an account.
+
+.TP
+
+.B account ID set SETTING VALUE
+
+Set an account setting.
+Note: those settings have special values: "alias", "username", 
+"password".
+Note: by setting alias you can refer to an account with it after-
+wards.
+Note: "encoding" is a very popular setting.
+
+.TP
+
+.B account ID uset SETTING VALUE
+
+Set an internal purpled setting to fine-tune account behaviour.
+Current possible settings are:
+
+(type) (name)             (default)
+bool   log_self           FALSE   write own messages for later collect.
+bool   add_buddy_on_send  TRUE    try to add buddy when messaging him.
+int    reconnect_timeout  0       reconnect in how many seconds on error. 0 to disable.
+
+Note: both "set" and "uset" commands may vary as "set", "seti",
+"setb", "uset", "useti", "usetb". -i variants are for integers,
+-b are for booleans. Default setting type is string.
+For boolean values use 1 or 0.
+
+.TP
+
+.B account ID delete
+
+Permamently delete an account.
+
+.TP
+
+.B account ID send USERNAME MESSAGE
+
+Sends Instant Message to specified user. 
+Note: please provide sufficient username!
+
+.TP
+
+.B account ID check USERNAME
+
+Output availible userinfo.
+
+.TP
+
+.B account ID forget USERNAME
+
+Remove specified user from buddy list if it existed.
+
+.TP
+
+.B account ID join CHAT
+
+Join chat.
+
+.TP
+
+.B account ID part CHAT
+
+Leave chat.
+
+.TP
+
+.B account ID collect [TIME]
+
+Gets conversation messages from account since the last time this 
+command was issued by this connection.
+
+Note: you can force TIME by providing it in a UNIX epoch, this is 
+usefull for http connections, which are not persistent.
+
+
+
+.SH AUTHOR
+
+driedfruit, xcinnay
+
+.SH SEE ALSO
+
+finch(1), pidgin(1)
