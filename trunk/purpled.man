@@ -65,7 +65,7 @@ $ purple -l127.0.0.1 -d
 All commands are separated by LF. It is OK to separate them with CRLF,
 in which case CR will be striped.
 
--TP 2
+.TP 2
 
 .B ver
 
@@ -139,8 +139,10 @@ Enable an account.
 Set an account setting.
 Note: those settings have special values: "alias", "username", 
 "password".
+.br
 Note: by setting alias you can refer to an account with it after-
 wards.
+.br
 Note: "encoding" is a very popular setting.
 
 .TP
@@ -151,8 +153,11 @@ Set an internal purpled setting to fine-tune account behaviour.
 Current possible settings are:
 
 (type) (name)             (default)
+.br
 bool   log_self           FALSE   write own messages for later collect.
+.br
 bool   add_buddy_on_send  TRUE    try to add buddy when messaging him.
+.br
 int    reconnect_timeout  0       reconnect in how many seconds on error. 0 to disable.
 
 Note: both "set" and "uset" commands may vary as "set", "seti",
