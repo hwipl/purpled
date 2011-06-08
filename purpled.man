@@ -46,19 +46,24 @@ specify on which IP address purpled listen.
 
 Default: any 0.0.0.0
 
+.TP
+
+.B -h
+display usage and exit.
+
 .SH EXAMPLES
 
 purpled, listen on port 4242 and stay in the terminal.
 
 .HP
 
-$ purple -p4242
+$ purpled -p4242
 
 purpled, listen on IP address 127.0.0.1 and start as a deamon.
 
 .HP
 
-$ purple -l127.0.0.1 -d
+$ purpled -l127.0.0.1 -d
 
 .SH COMMANDS
 
@@ -99,7 +104,7 @@ Lists all accounts and their states.
 
 .TP
 
-.B accound ID
+.B account ID
 
 Multi-purpose command to perform an operation on an account.
 ID either specifies index number from "account list" output,
@@ -107,6 +112,12 @@ either an alias assigned with "account ID set alias ALIAS"
 command.
 Note: if several accounts share an alias, one with the lowest
 index number will be selected, and the others - neglected.
+
+.TP
+
+.B account ID set alias ALIAS
+
+define an alias for the account which can be used instead of ID
 
 .TP
 

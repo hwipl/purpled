@@ -1449,6 +1449,21 @@ handle_server_signals(int sig)
 	}
 }
 
+void print_usage(void)
+{
+	fprintf(stderr, "Usage: purpled [-d] [-pPORT] [-lLISTEN_IP]\n"
+"OPTIONS\n"
+"-d		run purpled a unix daemon\n"
+"-pPORT		specify on which TCP port purpled listen. Default: 32000\n"
+"-lLISTEN_IP	specify on which IP address purpled listen. Default: any 0.0.0.0\n"
+"-h		display this help and exit\n\n"
+"EXAMPLES\n"
+"purpled, listen on port 4242 and stay in the terminal.\n"
+" $ purpled -p4242\n"
+"purpled, listen on IP address 127.0.0.1 and start as a deamon.\n"
+" $ purpled -l127.0.0.1 -d\n");
+}
+
 int main(int argc, char *argv[])
 {
 	char *param;
@@ -1469,11 +1484,17 @@ int main(int argc, char *argv[])
 			{
 				run_as_daemon = TRUE;
 			}
+			else if (param[1] == 'h')
+			{
+				print_usage();
+				return (EXIT_SUCCESS);
+			}
 			else if (param[1] == 'l')
 			{
 				if (!inet_aton (&param[2], &listen_addr))
 				{
 					fprintf(stderr, "invalid listen address: %s\n", &param[2]);
+					print_usage();
 					return (EXIT_FAILURE);
 				}
 			}
@@ -1484,6 +1505,7 @@ int main(int argc, char *argv[])
 				if ((port <= 1) || (port > 66536))
 				{
 					fprintf(stderr, "invalid listen port: %s\n", &param[2]);
+					print_usage();
 					return (EXIT_FAILURE);
 				}
 				else
@@ -1494,12 +1516,14 @@ int main(int argc, char *argv[])
 			else
 			{
 				fprintf(stderr, "unknown parameter: %s\n", param);
+				print_usage();
 				return (EXIT_FAILURE);
 			}
 		}
 		else
 		{
 			fprintf(stderr, "invalid parameter: %s\n", param);
+			print_usage();
 			return (EXIT_FAILURE);
 		}
 	}
