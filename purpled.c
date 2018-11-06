@@ -777,6 +777,38 @@ gboolean respond_account_delete(client* ptr, char *mesg, char **args, gpointer u
 
 	return TRUE;	
 }
+gboolean respond_account_buddies(client* ptr, char *mesg, char **args, gpointer user_data) {
+	/* Returns the buddy list for the specified account */
+	PurpleAccount *account = user_data;
+
+	GSList *buddies;
+	PurpleBuddy *buddy;
+	gchar *buf;
+
+	for (buddies = purple_find_buddies(account, NULL); buddies; buddies=buddies->next){
+		buddy = buddies->data;
+		PurplePresence *presence = purple_buddy_get_presence(buddy);
+		PurpleStatus *status = purple_presence_get_active_status(presence);
+		if(args[1] == NULL){
+			buf = g_strdup_printf("Status: %s Name: %s Alias: %s", purple_status_get_name(status),
+								purple_buddy_get_name(buddy), purple_buddy_get_alias(buddy));
+			purpld_client_send(ptr, buf);
+			purpld_client_send(ptr, "\n");
+		}
+		/* Return Available users only if requested */
+		else if(strcmp(args[1], "online")==0){
+			if(strcmp(purple_status_get_name(status), "Available") == 0){
+				buf = g_strdup_printf("Status: %s Name: %s Alias: %s", purple_status_get_name(status),
+									purple_buddy_get_name(buddy), purple_buddy_get_alias(buddy));
+				purpld_client_send(ptr, buf);
+				purpld_client_send(ptr, "\n");
+			}
+		}
+	}
+	g_slist_free(buddies);
+	g_free(buf);
+	return TRUE;
+}
 gboolean respond_account_enable(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 
@@ -963,6 +995,7 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args, gpointer 
 		{ "forget",	respond_account_forget,	0 },
 		{ "check",	respond_account_check,	0 },
 		{ "collect",respond_account_collect,0 },
+		{ "buddies", respond_account_buddies,	0 }
 	};
  	static int cli_len2 = sizeof(cli_commands2) / sizeof(PurpldCommandOps);
 	
