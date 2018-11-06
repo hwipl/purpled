@@ -750,6 +750,7 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 	PurpleAccount *account = user_data;
 	PurpleConversation *conv;
 	GList *iter1, *iter2;
+	GList *history;
 	gchar *buf;
 	int n;
 
@@ -758,11 +759,15 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 		conv = iter1->data;
 		PurpleAccount *ac = purple_conversation_get_account(conv);
 		if (ac != account) continue;
-		for(iter2 = purple_conversation_get_message_history(conv); iter2; iter2 = iter2->next) {
+		/* get history and reverse order of messages */
+		history = purple_conversation_get_message_history(conv);
+		history = g_list_reverse(g_list_copy(history));
+		for(iter2 = history; iter2; iter2 = iter2->next) {
+			/* send each message in history to client */
 			PurpleConvMessage *msg = iter2->data;
 			if (msg->when >= ptr->lastcollect) {
-				//account = purple_conversation_get_account(conv);
-				n = g_list_index(purple_accounts_get_all(), account);
+				n = g_list_index(purple_accounts_get_all(),
+						 account);
 				buf = g_strdup_printf("%d (%s) %d %s %s\n", n,
 					purple_conversation_get_name(conv),
 					(int) msg->when, msg->who, msg->what);
@@ -770,6 +775,8 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 				g_free(buf);
 			}
 		}
+		/* free temporary history copy */
+		g_list_free(history);
 
 	}
 	ptr->lastcollect = time(NULL);
