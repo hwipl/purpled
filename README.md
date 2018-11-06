@@ -11,8 +11,9 @@ Original project members:
 * XcinnaY (https://sourceforge.net/u/xcinnay/)
 * driedfruit (https://sourceforge.net/u/driedfruit/)
 
-The original code mirrored from sf.net is tagged as "mirrored". See README for
-original description and INSTALL for original building information.
+The original code mirrored from sf.net is tagged as
+["mirrored"](https://github.com/hwipl/purpled/releases/tag/mirrored). See
+README for original description and INSTALL for original building information.
 
 Later commits contain:
 * A patch from Leandro Britez (https://sourceforge.net/u/britinx/) to show the
