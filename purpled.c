@@ -750,8 +750,9 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 	PurpleAccount *account = user_data;
 	PurpleConversation *conv;
 	GList *iter1, *iter2;
-	gchar *buf;	
-	
+	gchar *buf;
+	int n;
+
 	if (args[1]) ptr->lastcollect = atoi(args[1]);
 	for (iter1 = purple_get_conversations(); iter1; iter1=iter1->next) {
 		conv = iter1->data;
@@ -760,7 +761,11 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 		for(iter2 = purple_conversation_get_message_history(conv); iter2; iter2 = iter2->next) {
 			PurpleConvMessage *msg = iter2->data;
 			if (msg->when >= ptr->lastcollect) {
-				buf = g_strdup_printf("(%s) %d %s %s\n", purple_conversation_get_name(conv), (int) msg->when, msg->who, msg->what);
+				//account = purple_conversation_get_account(conv);
+				n = g_list_index(purple_accounts_get_all(), account);
+				buf = g_strdup_printf("%d (%s) %d %s %s\n", n,
+					purple_conversation_get_name(conv),
+					(int) msg->when, msg->who, msg->what);
 				purpld_client_send(ptr, buf);
 				g_free(buf);
 			}
