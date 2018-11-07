@@ -24,6 +24,7 @@
 //#include <sys/mman.h>
 //	#include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 //#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -1377,30 +1378,60 @@ int init_paths(void) {
 	return 1;
 }
 
-void init_server(in_port_t listen_port, struct in_addr listen_addr) {
-   int on = 1;
+void init_server_inet(in_port_t listen_port, struct in_addr listen_addr) {
 	struct sockaddr_in servaddr;
+	int on = 1;
 
-   listenfd=socket(AF_INET, SOCK_STREAM, 0);
-   
+	listenfd = socket(AF_INET, SOCK_STREAM, 0);
+
 	/* Enable address reuse */
-	setsockopt( listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );   
-	
-   bzero(&servaddr,sizeof(servaddr));
-   servaddr.sin_family = AF_INET;
-   servaddr.sin_addr = listen_addr;
-   servaddr.sin_port = listen_port;
-   
-   if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-   	perror("Bind Failed");
-   	exit(EXIT_FAILURE);
-   }
-   if (listen(listenfd, PD_SMALL_BUFFER) < 0) {
-   	perror("Listen Failed");
-   	exit(EXIT_FAILURE);
-   }
+	setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
 
-	//purple_glib_input_add(listenfd, PURPLE_INPUT_READ, purpld_accept_client, NULL);
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr = listen_addr;
+	servaddr.sin_port = listen_port;
+
+	if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
+	{
+		perror("Bind Failed");
+		exit(EXIT_FAILURE);
+	}
+	if (listen(listenfd, PD_SMALL_BUFFER) < 0) {
+		perror("Listen Failed");
+		exit(EXIT_FAILURE);
+	}
+	//purple_glib_input_add(listenfd, PURPLE_INPUT_READ,
+	//purpld_accept_client, NULL);
+	glib_input_add(listenfd, PURPLE_GLIB_READ_COND, purpld_accept_client);
+}
+
+void init_server_unix(void) {
+	char *sock_name = "purpled.sock";
+	struct sockaddr_un servaddr;
+	char *socket_path;
+
+	listenfd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (listenfd == -1) {
+		perror("Socket creation failed");
+		exit(EXIT_FAILURE);
+	}
+
+	bzero(&servaddr,sizeof(servaddr));
+	servaddr.sun_family = AF_UNIX;
+	socket_path = g_build_filename(purpld_dirs.home_dir, sock_name, NULL);
+	strncpy(servaddr.sun_path, socket_path, sizeof(servaddr.sun_path)-1);
+	unlink(socket_path);
+
+	if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
+	{
+		perror("Bind Failed");
+		exit(EXIT_FAILURE);
+	}
+	if (listen(listenfd, PD_SMALL_BUFFER) < 0) {
+		perror("Listen Failed");
+		exit(EXIT_FAILURE);
+	}
 	glib_input_add(listenfd, PURPLE_GLIB_READ_COND, purpld_accept_client);
 }
 
@@ -1510,24 +1541,28 @@ handle_server_signals(int sig)
 void print_usage(void)
 {
 	fprintf(stderr, "Usage: purpled [-d] [-pPORT] [-lLISTEN_IP]\n"
-"OPTIONS\n"
-"-d		run purpled a unix daemon\n"
-"-pPORT		specify on which TCP port purpled listen. Default: 32000\n"
-"-lLISTEN_IP	specify on which IP address purpled listen. Default: any 0.0.0.0\n"
-"-h		display this help and exit\n\n"
-"EXAMPLES\n"
-"purpled, listen on port 4242 and stay in the terminal.\n"
-" $ purpled -p4242\n"
-"purpled, listen on IP address 127.0.0.1 and start as a deamon.\n"
-" $ purpled -l127.0.0.1 -d\n");
+		"OPTIONS\n"
+		"-d		run purpled a unix daemon\n"
+		"-i		use AF_INET/TCP socket\n"
+		"-pPORT		specify on which TCP port purpled listen. Default: 32000\n"
+		"-lLISTEN_IP	specify on which IP address purpled listen. Default: any 0.0.0.0\n"
+		"-u		use AF_UNIX socket\n"
+		"-h		display this help and exit\n\n"
+		"EXAMPLES\n"
+		"purpled, listen on port 4242 and stay in the terminal.\n"
+		" $ purpled -i -p4242\n"
+		"purpled, listen on IP address 127.0.0.1 and start as a deamon.\n"
+		" $ purpled -i -l127.0.0.1 -d\n");
 }
 
 int main(int argc, char *argv[])
 {
-	char *param;
 	gboolean run_as_daemon = TRUE;
-	in_port_t listen_port;
+	gboolean inet_socket = FALSE;
+	gboolean unix_socket = FALSE;
 	struct in_addr listen_addr;
+	in_port_t listen_port;
+	char *param;
 	int i;
 
 	run_as_daemon = FALSE;
@@ -1546,6 +1581,14 @@ int main(int argc, char *argv[])
 			{
 				print_usage();
 				return (EXIT_SUCCESS);
+			}
+			else if (param[1] == 'u') {
+				/* AF_UNIX socket */
+				unix_socket = TRUE;
+			}
+			else if (param[1] == 'i') {
+				/* AF_INET socket */
+				inet_socket = TRUE;
 			}
 			else if (param[1] == 'l')
 			{
@@ -1585,6 +1628,14 @@ int main(int argc, char *argv[])
 			return (EXIT_FAILURE);
 		}
 	}
+
+	/* either AF_INET or AF_UNIX must be selected */
+	if (!unix_socket && !inet_socket) {
+		fprintf(stderr, "missing -i or -u\n");
+		print_usage();
+		return(EXIT_FAILURE);
+	}
+
 	/* Bye-bye terminal */
 	if (run_as_daemon)
 		daemonize();
@@ -1600,7 +1651,10 @@ int main(int argc, char *argv[])
 	g_set_prgname("purpleD");
 
 	/* Init server part */
-	init_server(listen_port, listen_addr);
+	if (inet_socket)
+		init_server_inet(listen_port, listen_addr);
+	if (unix_socket)
+		init_server_unix();
 
 	/* Init client(s) part */
 	init_libpurple();
