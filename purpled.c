@@ -443,25 +443,28 @@ static gint find_client(gconstpointer a, gconstpointer b) {
 }
 
 void client_set_instance(client* ptr) {
-		GList *iter;
-		client *cli;
-		int min_i = 0, min_a = 0;
-		time_t max_c = 0;
-		for (iter = g_list_first(clients);iter;iter = iter->next) {
-			cli = iter->data;
-			if (cli != ptr && !strcmp(cli->user, ptr->user)) {
-					if (cli->instance > min_i) min_i = cli->instance; 
-					if (cli->instance < min_a || min_a == 0) min_a = cli->instance;
-					if (cli->lastcollect > max_c) max_c = cli->lastcollect;
-			}
+	GList *iter;
+	client *cli;
+	int min_i = 0, min_a = 0;
+	time_t max_c = 0;
+	for (iter = g_list_first(clients);iter;iter = iter->next) {
+		cli = iter->data;
+		if (cli != ptr && !strcmp(cli->user, ptr->user)) {
+			if (cli->instance > min_i)
+				min_i = cli->instance;
+			if (cli->instance < min_a || min_a == 0)
+				min_a = cli->instance;
+			if (cli->lastcollect > max_c)
+				max_c = cli->lastcollect;
 		}
-		if (!max_c)
-			max_c = time(NULL);
-			ptr->lastcollect = max_c;
-		if (min_a > 1) 
-			ptr->instance = min_a - 1;
-		else
-			ptr->instance = min_i + 1;
+	}
+	if (!max_c)
+		max_c = time(NULL);
+	ptr->lastcollect = max_c;
+	if (min_a > 1)
+		ptr->instance = min_a - 1;
+	else
+		ptr->instance = min_i + 1;
 }
 
 gboolean respond_to_login(client* ptr, char *mesg, char **args, gpointer user_data) {
@@ -789,7 +792,8 @@ gboolean respond_account_delete(client* ptr, char *mesg, char **args, gpointer u
 
 	return TRUE;	
 }
-gboolean respond_account_buddies(client* ptr, char *mesg, char **args, gpointer user_data) {
+gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
+				 gpointer user_data) {
 	/* Returns the buddy list for the specified account */
 	PurpleAccount *account = user_data;
 
@@ -797,28 +801,37 @@ gboolean respond_account_buddies(client* ptr, char *mesg, char **args, gpointer 
 	PurpleBuddy *buddy;
 	gchar *buf;
 
-	for (buddies = purple_find_buddies(account, NULL); buddies; buddies=buddies->next){
+	for (buddies = purple_find_buddies(account, NULL); buddies;
+	     buddies=buddies->next){
 		buddy = buddies->data;
 		PurplePresence *presence = purple_buddy_get_presence(buddy);
-		PurpleStatus *status = purple_presence_get_active_status(presence);
+		PurpleStatus *status =
+			purple_presence_get_active_status(presence);
 		if(args[1] == NULL){
-			buf = g_strdup_printf("Status: %s Name: %s Alias: %s", purple_status_get_name(status),
-								purple_buddy_get_name(buddy), purple_buddy_get_alias(buddy));
+			buf = g_strdup_printf("Status: %s Name: %s Alias: %s",
+					      purple_status_get_name(status),
+					      purple_buddy_get_name(buddy),
+					      purple_buddy_get_alias(buddy));
 			purpld_client_send(ptr, buf);
 			purpld_client_send(ptr, "\n");
+			g_free(buf);
 		}
 		/* Return Available users only if requested */
 		else if(strcmp(args[1], "online")==0){
-			if(strcmp(purple_status_get_name(status), "Available") == 0){
-				buf = g_strdup_printf("Status: %s Name: %s Alias: %s", purple_status_get_name(status),
-									purple_buddy_get_name(buddy), purple_buddy_get_alias(buddy));
+			if(strcmp(purple_status_get_name(status),
+				  "Available") == 0){
+				buf = g_strdup_printf(
+					"Status: %s Name: %s Alias: %s",
+					purple_status_get_name(status),
+					purple_buddy_get_name(buddy),
+					purple_buddy_get_alias(buddy));
 				purpld_client_send(ptr, buf);
 				purpld_client_send(ptr, "\n");
+				g_free(buf);
 			}
 		}
 	}
 	g_slist_free(buddies);
-	g_free(buf);
 	return TRUE;
 }
 gboolean respond_account_enable(client* ptr, char *mesg, char **args, gpointer user_data) {
