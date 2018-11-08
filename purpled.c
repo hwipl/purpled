@@ -793,6 +793,7 @@ gboolean respond_account_delete(client* ptr, char *mesg, char **args, gpointer u
 
 	return TRUE;	
 }
+
 gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
 				 gpointer user_data) {
 	/* Returns the buddy list for the specified account */
@@ -803,38 +804,30 @@ gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
 	gchar *buf;
 
 	for (buddies = purple_find_buddies(account, NULL); buddies;
-	     buddies=buddies->next){
+	     buddies = buddies->next){
 		buddy = buddies->data;
 		PurplePresence *presence = purple_buddy_get_presence(buddy);
 		PurpleStatus *status =
 			purple_presence_get_active_status(presence);
-		if(args[1] == NULL){
-			buf = g_strdup_printf("Status: %s Name: %s Alias: %s",
-					      purple_status_get_name(status),
-					      purple_buddy_get_name(buddy),
-					      purple_buddy_get_alias(buddy));
-			purpld_client_send(ptr, buf);
-			purpld_client_send(ptr, "\n");
-			g_free(buf);
+
+		if (args[1] != NULL && strcmp(args[1], "online") == 0 &&
+		    strcmp(purple_status_get_name(status), "Available") != 0) {
+			/* Return Available users only */
+			continue;
 		}
-		/* Return Available users only if requested */
-		else if(strcmp(args[1], "online")==0){
-			if(strcmp(purple_status_get_name(status),
-				  "Available") == 0){
-				buf = g_strdup_printf(
-					"Status: %s Name: %s Alias: %s",
-					purple_status_get_name(status),
-					purple_buddy_get_name(buddy),
-					purple_buddy_get_alias(buddy));
-				purpld_client_send(ptr, buf);
-				purpld_client_send(ptr, "\n");
-				g_free(buf);
-			}
-		}
+
+		buf = g_strdup_printf("buddy: status: %s name: %s alias: %s",
+				      purple_status_get_name(status),
+				      purple_buddy_get_name(buddy),
+				      purple_buddy_get_alias(buddy));
+		purpld_client_send(ptr, buf);
+		purpld_client_send(ptr, "\n");
+		g_free(buf);
 	}
 	g_slist_free(buddies);
 	return TRUE;
 }
+
 gboolean respond_account_enable(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
 
