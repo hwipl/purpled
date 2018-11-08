@@ -321,36 +321,24 @@ static PurpleRequestUiOps purpld_request_uiops =
 /*** Conversation uiops ***/
 static void
 purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
-			const char *message, PurpleMessageFlags flags, time_t mtime)
+			const char *message, PurpleMessageFlags flags,
+			time_t mtime)
 {
-	/*
-	const char *name;
-	if (alias && *alias)
-		name = alias;
-	else if (who && *who)
-		name = who;
-	else
-		name = NULL;
-	*/
-	/*GList *accounts;*/
 	PurpleAccount *account;
-	int n;
 	gchar *buf;
-	
+	int n;
+
 	account = purple_conversation_get_account(conv);
 
 	n = g_list_index(purple_accounts_get_all(), account);
-	
-	buf = g_strdup_printf("%d (%s) %d %s: %s\n", n, purple_conversation_get_name(conv), (int) mtime,
-										who, message);
-	
+	buf = g_strdup_printf("message: %d (%s) %d %s: %s\n", n,
+			      purple_conversation_get_name(conv), (int) mtime,
+			      who, message);
 	purpld_inform_client(account, buf);
 	g_free(buf);
-	//ptr->lastcollect = mtime;					
-	
 }
 
-static PurpleConversationUiOps purpld_conv_uiops = 
+static PurpleConversationUiOps purpld_conv_uiops =
 {
 	NULL,                      /* create_conversation  */
 	NULL,                      /* destroy_conversation */
