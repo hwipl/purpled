@@ -750,7 +750,8 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args, gpointer us
 
 	return TRUE; 
 }
-gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer user_data) {
+gboolean respond_account_collect(client* ptr, char *mesg, char **args,
+				 gpointer user_data) {
 	PurpleAccount *account = user_data;
 	PurpleConversation *conv;
 	GList *iter1, *iter2;
@@ -769,22 +770,24 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args, gpointer 
 		for(iter2 = history; iter2; iter2 = iter2->next) {
 			/* send each message in history to client */
 			PurpleConvMessage *msg = iter2->data;
-			if (msg->when >= ptr->lastcollect) {
-				n = g_list_index(purple_accounts_get_all(),
-						 account);
-				buf = g_strdup_printf("%d (%s) %d %s %s\n", n,
+
+			/* skip already collected messages */
+			if (msg->when < ptr->lastcollect)
+				continue;
+
+			n = g_list_index(purple_accounts_get_all(), account);
+			buf = g_strdup_printf("collect: %d (%s) %d %s %s\n", n,
 					purple_conversation_get_name(conv),
 					(int) msg->when, msg->who, msg->what);
-				purpld_client_send(ptr, buf);
-				g_free(buf);
-			}
+			purpld_client_send(ptr, buf);
+			g_free(buf);
 		}
 		/* free temporary history copy */
 		g_list_free(history);
 
 	}
 	ptr->lastcollect = time(NULL);
-	return TRUE;	
+	return TRUE;
 }
 gboolean respond_account_delete(client* ptr, char *mesg, char **args, gpointer user_data) {
 	PurpleAccount *account = user_data;
