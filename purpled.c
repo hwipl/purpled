@@ -793,6 +793,7 @@ gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
 	GSList *buddies;
 	PurpleBuddy *buddy;
 	gchar *buf;
+	int n;
 
 	for (buddies = purple_find_buddies(account, NULL); buddies;
 	     buddies = buddies->next){
@@ -807,8 +808,9 @@ gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
 			continue;
 		}
 
-		buf = g_strdup_printf("buddy: status: %s name: %s alias: %s",
-				      purple_status_get_name(status),
+		n = g_list_index(purple_accounts_get_all(), account);
+		buf = g_strdup_printf("buddy: %d status: %s name: %s alias: %s",
+				      n, purple_status_get_name(status),
 				      purple_buddy_get_name(buddy),
 				      purple_buddy_get_alias(buddy));
 		purpld_client_send(ptr, buf);
