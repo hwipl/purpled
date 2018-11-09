@@ -1,4 +1,4 @@
-# purpleD mirror
+# purpleD mirror/fork
 
 This is a mirror of the purpleD libpurple daemon:
 https://sourceforge.net/projects/purpled/
