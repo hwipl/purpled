@@ -18,4 +18,8 @@ README for original description and INSTALL for original building information.
 Later commits contain:
 * A patch from Leandro Britez (https://sourceforge.net/u/britinx/) to show the
   (online) buddies of an account with `account ID buddies [ONLINE]`
+* Support for Unix Domain Sockets/AF\_UNIX sockets; use command line parameter
+  `-i` for an AF\_INET socket and `-u` for an AF\_UNIX socket
+* Changes to the messages sent from purpleD to clients: they now contain the
+  "message type" to make parsing easier
 * ...
