@@ -353,7 +353,7 @@ purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 	account = purple_conversation_get_account(conv);
 
 	n = g_list_index(purple_accounts_get_all(), account);
-	buf = g_strdup_printf("message: %d (%s) %d %s: %s\n", n,
+	buf = g_strdup_printf("message: %d (%s) %d %s: %s\r\n", n,
 			      purple_conversation_get_name(conv), (int) mtime,
 			      who, message);
 	purpld_inform_client(account, buf);
@@ -828,8 +828,8 @@ gboolean respond_account_collect(client* ptr, char *mesg, char **args,
 				continue;
 
 			n = g_list_index(purple_accounts_get_all(), account);
-			buf = g_strdup_printf("collect: %d (%s) %d %s %s\n", n,
-					purple_conversation_get_name(conv),
+			buf = g_strdup_printf("collect: %d (%s) %d %s %s\r\n",
+					n, purple_conversation_get_name(conv),
 					(int) msg->when, msg->who, msg->what);
 			purpld_client_send(ptr, buf);
 			g_free(buf);
@@ -880,7 +880,7 @@ gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
 				      purple_buddy_get_name(buddy),
 				      purple_buddy_get_alias(buddy));
 		purpld_client_send(ptr, buf);
-		purpld_client_send(ptr, "\n");
+		purpld_client_send(ptr, "\r\n");
 		g_free(buf);
 	}
 	g_slist_free(buddies);
