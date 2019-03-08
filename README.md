@@ -26,6 +26,8 @@ Later commits contain the following changes:
 * v0.1:
   * Support for Unix Domain Sockets/AF\_UNIX sockets; use command line
     parameter `-i` for an AF\_INET socket and `-u` for an AF\_UNIX socket
-  * Changes to the messages sent from purpleD to clients: they now contain the
-    "message type" to make parsing easier
+  * Changes to the messages sent from purpleD to clients to make parsing
+    easier: they now contain the "message type" and use CR/LF to mark the end
+    of messages
+  * A meson.build file
 * ...
