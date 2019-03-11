@@ -41,7 +41,7 @@
 #include <unistd.h>
 
 #include "defines.h"
-#include "config.h"
+//#include "config.h"
 
 /**
  * The following eventloop functions are used in both pidgin and purple-text.
