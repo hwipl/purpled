@@ -1025,15 +1025,15 @@ gboolean respond_account_list(client* ptr, char *mesg, char **args,
 	int n;
 	char tmp[PD_STRING];
 
-	sprintf(tmp, "Accounts: \n");
-	purpld_client_send(ptr, tmp);
+	//sprintf(tmp, "Accounts: \n");
+	//purpld_client_send(ptr, tmp);
 
 	n = 0;
 	for (iter = purple_accounts_get_all(); iter; iter = iter->next) {
 		PurpleAccount *account = iter->data;
 		PurplePresence *pres = purple_account_get_presence(account);
 		PurpleStatus *stat = purple_presence_get_active_status (pres);
-		sprintf(tmp, "%d) %s %s %s [%s]\n", n,
+		sprintf(tmp, "account: %d %s %s %s [%s]\r\n", n,
 			purple_account_get_alias(account),
 			purple_account_get_protocol_name(account),
 			account->username,
