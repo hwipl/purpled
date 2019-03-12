@@ -202,7 +202,7 @@ purpld_notify_userinfo(PurpleConnection *gc, const char *who,
 	     iter=iter->next) {
 		PurpleNotifyUserInfoEntry *ent = iter->data;
 		gchar *info = g_strdup_printf(
-				"%s = %s \n",
+				"%s = %s\r\n",
 				purple_notify_user_info_entry_get_label(ent),
 				purple_notify_user_info_entry_get_value(ent));
 		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
@@ -253,8 +253,8 @@ purpld_request_file(const char *title, const char *filename,
 	path = g_build_filename(dir, xfer->filename, NULL);
 
 	n = g_list_index(purple_accounts_get_all(), account);
-	gchar *msg = g_strdup_printf("%d) FILE %d %s %s\n", n, (int) time(NULL),
-				     who, path);
+	gchar *msg = g_strdup_printf("%d) FILE %d %s %s\r\n", n,
+				     (int) time(NULL), who, path);
 	purpld_inform_client(account, msg) ;
 #if 1
 	if (!conv) {
@@ -618,7 +618,7 @@ gboolean respond_command_ver(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	gchar *buf;
 
-	buf = g_strdup_printf ("purpled %d.%d.%d/%c, libpurple %d.%d.%d\n",
+	buf = g_strdup_printf ("purpled %d.%d.%d/%c, libpurple %d.%d.%d\r\n",
 			       PURPLED_VERSION_MAJOR, PURPLED_VERSION_MINOR,
 			       PURPLED_VERSION_MICRO, PURPLED_VERSION_STATE,
 			       PURPLE_MAJOR_VERSION, PURPLE_MINOR_VERSION,
@@ -640,7 +640,7 @@ gboolean respond_command_who(client* ptr, char *mesg, char **args,
         char *conn_type = (cli->conntype == CONNECTION_IRC ? "irc" :
 			   (cli->conntype == CONNECTION_HTTP ? "http" : "raw"));
         char *cli_addr = inet_ntoa(cli->addr.sin_addr);
-		buf = g_strdup_printf ("%10s/%s%d %s\n",
+		buf = g_strdup_printf ("%10s/%s%d %s\r\n",
 				       (cli->user[0] ? cli->user : "????"),
 				       conn_type, cli->instance, cli_addr);
 		purpld_client_send(ptr, buf);
@@ -731,7 +731,7 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 
 	if (!con || purple_account_is_connecting(account)) {
 		gchar *error = g_strdup_printf(
-			"Failed to message \"%s\": Account %s offline\n",
+			"Failed to message \"%s\": Account %s offline\r\n",
 			args[1], account->username);
 		purpld_client_send(ptr, error);
 		g_free(error);
@@ -780,8 +780,8 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args,
 
 	if (!con || purple_account_is_connecting(account))		{
 		gchar *error = g_strdup_printf(
-				"Failed to check \"%s\": Account %s offline\n",
-				args[1], account->username);
+			"Failed to check \"%s\": Account %s offline\r\n",
+			args[1], account->username);
 		purpld_client_send(ptr, error);
 		g_free(error);
 		return TRUE;
@@ -790,7 +790,7 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args,
 	PurpleBuddyIcon *bicon = purple_buddy_icons_find(account, args[1]);
 	if (bicon) {
 		gchar *info = g_strdup_printf(
-					"Buddy-Icon = %s %s\n",
+					"Buddy-Icon = %s %s\r\n",
 					purple_buddy_icon_get_checksum(bicon),
 					purple_buddy_icon_get_extension(bicon));
 		purpld_client_send(ptr, info);
@@ -968,7 +968,7 @@ gboolean respond_account_set(client* ptr, char *mesg, char **args,
 	//account = purple_account_find(username, info->id);
 	//PurpleAccount * 	purple_accounts_find (const char *name, const char *protocol)
 
-	buf = g_strdup_printf("%c %s = %s \n", extra, args[1], args[2]);
+	buf = g_strdup_printf("%c %s = %s\r\n", extra, args[1], args[2]);
 	purpld_client_send(ptr, buf);
 	g_free(buf);
 	return TRUE;
@@ -1125,8 +1125,8 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args,
 		}
 		if (!account) {
 			msg = g_strdup_printf(
-					"Bad command or account name \"%s\" \n",
-					args[1]);
+				"Bad command or account name \"%s\"\r\n",
+				args[1]);
 			purpld_client_send(ptr, msg);
 			g_free(msg);
 			return TRUE;
