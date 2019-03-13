@@ -195,14 +195,22 @@ purpld_notify_userinfo(PurpleConnection *gc, const char *who,
 		       PurpleNotifyUserInfo *user_info)
 {
 	GList *iter;
+	int n;
 
 	PurpleAccount *account = purple_connection_get_account(gc);
+	n = g_list_index(purple_accounts_get_all(), account);
 
 	for (iter = purple_notify_user_info_get_entries(user_info); iter;
 	     iter=iter->next) {
 		PurpleNotifyUserInfoEntry *ent = iter->data;
 		gchar *info = g_strdup_printf(
-				"%s = %s\r\n",
+				//"%s = %s\r\n",
+				"info: %d %s %s = %s\r\n", n, who,
+				//"message: %d (%s) %d %s: %s = %s\r\n", n,
+				//purple_conversation_get_name(conv),
+				//who,
+				//(int) time(NULL),
+				//who,
 				purple_notify_user_info_entry_get_label(ent),
 				purple_notify_user_info_entry_get_value(ent));
 		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
@@ -253,7 +261,7 @@ purpld_request_file(const char *title, const char *filename,
 	path = g_build_filename(dir, xfer->filename, NULL);
 
 	n = g_list_index(purple_accounts_get_all(), account);
-	gchar *msg = g_strdup_printf("%d) FILE %d %s %s\r\n", n,
+	gchar *msg = g_strdup_printf("info: %d) FILE %d %s %s\r\n", n,
 				     (int) time(NULL), who, path);
 	purpld_inform_client(account, msg) ;
 #if 1
@@ -618,7 +626,7 @@ gboolean respond_command_ver(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	gchar *buf;
 
-	buf = g_strdup_printf ("purpled %d.%d.%d/%c, libpurple %d.%d.%d\r\n",
+	buf = g_strdup_printf ("info: purpled %d.%d.%d/%c, libpurple %d.%d.%d\r\n",
 			       PURPLED_VERSION_MAJOR, PURPLED_VERSION_MINOR,
 			       PURPLED_VERSION_MICRO, PURPLED_VERSION_STATE,
 			       PURPLE_MAJOR_VERSION, PURPLE_MINOR_VERSION,
@@ -640,7 +648,7 @@ gboolean respond_command_who(client* ptr, char *mesg, char **args,
         char *conn_type = (cli->conntype == CONNECTION_IRC ? "irc" :
 			   (cli->conntype == CONNECTION_HTTP ? "http" : "raw"));
         char *cli_addr = inet_ntoa(cli->addr.sin_addr);
-		buf = g_strdup_printf ("%10s/%s%d %s\r\n",
+		buf = g_strdup_printf ("info: %10s/%s%d %s\r\n",
 				       (cli->user[0] ? cli->user : "????"),
 				       conn_type, cli->instance, cli_addr);
 		purpld_client_send(ptr, buf);
@@ -731,7 +739,7 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 
 	if (!con || purple_account_is_connecting(account)) {
 		gchar *error = g_strdup_printf(
-			"Failed to message \"%s\": Account %s offline\r\n",
+			"error: Failed to message \"%s\": Account %s offline\r\n",
 			args[1], account->username);
 		purpld_client_send(ptr, error);
 		g_free(error);
@@ -777,10 +785,11 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args,
 			       gpointer user_data) {
 	PurpleAccount *account = user_data;
 	PurpleConnection *con = purple_account_get_connection(account);
+	//int n = g_list_index(purple_accounts_get_all(), account);
 
 	if (!con || purple_account_is_connecting(account))		{
 		gchar *error = g_strdup_printf(
-			"Failed to check \"%s\": Account %s offline\r\n",
+			"error: Failed to check \"%s\": Account %s offline\r\n",
 			args[1], account->username);
 		purpld_client_send(ptr, error);
 		g_free(error);
@@ -790,9 +799,11 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args,
 	PurpleBuddyIcon *bicon = purple_buddy_icons_find(account, args[1]);
 	if (bicon) {
 		gchar *info = g_strdup_printf(
-					"Buddy-Icon = %s %s\r\n",
-					purple_buddy_icon_get_checksum(bicon),
-					purple_buddy_icon_get_extension(bicon));
+			//"message: %d (%s) %d %s: Buddy-Icon = %s %s\r\n", n,
+			//args[1], (int) time(NULL), args[1],
+			"info: Buddy-Icon = %s %s\r\n",
+			purple_buddy_icon_get_checksum(bicon),
+			purple_buddy_icon_get_extension(bicon));
 		purpld_client_send(ptr, info);
 		g_free(info);
 	}
@@ -968,7 +979,7 @@ gboolean respond_account_set(client* ptr, char *mesg, char **args,
 	//account = purple_account_find(username, info->id);
 	//PurpleAccount * 	purple_accounts_find (const char *name, const char *protocol)
 
-	buf = g_strdup_printf("%c %s = %s\r\n", extra, args[1], args[2]);
+	buf = g_strdup_printf("info: %c %s = %s\r\n", extra, args[1], args[2]);
 	purpld_client_send(ptr, buf);
 	g_free(buf);
 	return TRUE;
@@ -1125,7 +1136,7 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args,
 		}
 		if (!account) {
 			msg = g_strdup_printf(
-				"Bad command or account name \"%s\"\r\n",
+				"error: Bad command or account name \"%s\"\r\n",
 				args[1]);
 			purpld_client_send(ptr, msg);
 			g_free(msg);
