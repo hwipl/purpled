@@ -1419,14 +1419,16 @@ int uninit_path(void) {
     return 1;
 }
 
-int init_paths(void) {
+int init_paths(char *work_dir) {
 	/* Get directories and such */
 	struct passwd *passwd;
 	uid_t id = getuid();
 	passwd = getpwuid ( id );
 
 	gchar *path;
-	if (id == 0) {
+	if (work_dir) {
+		path = g_build_filename(work_dir, NULL);
+	} else if (id == 0) {
 		path = g_build_filename("usr", "local", "etc", UI_ID, NULL);
 	} else if (!strcmp(passwd->pw_gecos, UI_ID)) {
 		path = g_build_filename(passwd->pw_dir, NULL);
@@ -1653,6 +1655,7 @@ void print_usage(void)
 		"-pPORT		specify on which TCP port purpled listen. Default: 32000\n"
 		"-lLISTEN_IP	specify on which IP address purpled listen. Default: any 0.0.0.0\n"
 		"-u		use AF_UNIX socket\n"
+		"-wDIR		specify working directory of purpled\n"
 		"-h		display this help and exit\n\n"
 		"EXAMPLES\n"
 		"purpled, listen on port 4242 and stay in the terminal.\n"
@@ -1668,6 +1671,7 @@ int main(int argc, char *argv[])
 	gboolean unix_socket = FALSE;
 	struct in_addr listen_addr;
 	in_port_t listen_port;
+	char *work_dir = NULL;
 	char *param;
 	int i;
 
@@ -1724,6 +1728,10 @@ int main(int argc, char *argv[])
 					listen_port = htons ((short) port);
 				}
 			}
+			else if (param[1] == 'w')
+			{
+				work_dir = &param[2];
+			}
 			else
 			{
 				fprintf(stderr, "unknown parameter: %s\n",
@@ -1752,7 +1760,7 @@ int main(int argc, char *argv[])
 		daemonize();
 
 	/* Look around */
-	init_paths();
+	init_paths(work_dir);
 
 	/* Handle signals */
 	signal(SIGINT, handle_server_signals);
