@@ -18,11 +18,14 @@ README for original description and INSTALL for original building information.
 Later commits contain the following changes:
 
 ## Changes:
-* mirrored:
-  * original code from sf.net
-* v0.0.1:
-  * A patch from [Leandro Britez](https://sourceforge.net/u/britinx/) to show
-    the (online) buddies of an account with `account ID buddies [ONLINE]`
+* v0.2:
+  * Switched to meson and made purpled installable with it. Old Makefiles etc.
+    are in folder `orig`.
+  * Message format updates: made `account list` reply easier to parse. Added
+    more CR/LF message terminations. Introduced `info:` and `error:` message
+    types.
+  * Introduced command line parameter to specify working directory.
+  * ...
 * v0.1:
   * Support for Unix Domain Sockets/AF\_UNIX sockets; use command line
     parameter `-i` for an AF\_INET socket and `-u` for an AF\_UNIX socket
@@ -30,4 +33,8 @@ Later commits contain the following changes:
     easier: they now contain the "message type" and use CR/LF to mark the end
     of messages
   * A meson.build file
-* ...
+* v0.0.1:
+  * A patch from [Leandro Britez](https://sourceforge.net/u/britinx/) to show
+    the (online) buddies of an account with `account ID buddies [ONLINE]`
+* mirrored:
+  * original code from sf.net
