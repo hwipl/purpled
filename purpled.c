@@ -785,7 +785,7 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args,
 			       gpointer user_data) {
 	PurpleAccount *account = user_data;
 	PurpleConnection *con = purple_account_get_connection(account);
-	//int n = g_list_index(purple_accounts_get_all(), account);
+	int n = g_list_index(purple_accounts_get_all(), account);
 
 	if (!con || purple_account_is_connecting(account))		{
 		gchar *error = g_strdup_printf(
@@ -801,7 +801,7 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args,
 		gchar *info = g_strdup_printf(
 			//"message: %d (%s) %d %s: Buddy-Icon = %s %s\r\n", n,
 			//args[1], (int) time(NULL), args[1],
-			"info: Buddy-Icon = %s %s\r\n",
+			"info: %d Buddy-Icon = %s %s\r\n", n,
 			purple_buddy_icon_get_checksum(bicon),
 			purple_buddy_icon_get_extension(bicon));
 		purpld_client_send(ptr, info);
@@ -938,8 +938,9 @@ gboolean respond_account_set(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	PurpleAccount *account = user_data;
 	/*PurpleSavedStatus *status;*/
-	gchar *buf;
 	gchar extra = '*';
+	gchar *buf;
+	int n;
 
 	if (!strcmp(args[0], "useti")) {
 		extra = 'U';
@@ -979,7 +980,9 @@ gboolean respond_account_set(client* ptr, char *mesg, char **args,
 	//account = purple_account_find(username, info->id);
 	//PurpleAccount * 	purple_accounts_find (const char *name, const char *protocol)
 
-	buf = g_strdup_printf("info: %c %s = %s\r\n", extra, args[1], args[2]);
+	n = g_list_index(purple_accounts_get_all(), account);
+	buf = g_strdup_printf("info: %d %c %s = %s\r\n", n, extra, args[1],
+			      args[2]);
 	purpld_client_send(ptr, buf);
 	g_free(buf);
 	return TRUE;
