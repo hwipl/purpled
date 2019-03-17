@@ -15,7 +15,20 @@ The original code mirrored from sf.net is tagged as
 ["mirrored"](https://github.com/hwipl/purpled/releases/tag/mirrored). See
 README for original description and INSTALL for original building information.
 
-Later commits contain the following changes:
+Later commits contain the changes described in the "Changes" section.
+
+## Installation:
+
+You can install purpled with the following steps:
+
+* Download [purpled](https://github.com/hwipl/purpled)
+* Build and install purpled with:
+  * `meson builddir`
+  * `ninja -C builddir install`
+
+Note: these steps require the [meson](https://mesonbuild.com/) build system.
+In case you want to use the old Makefiles etc., you can find them in the `orig`
+directory.
 
 ## Changes:
 * v0.2:
@@ -25,7 +38,6 @@ Later commits contain the following changes:
     more CR/LF message terminations. Introduced `info:` and `error:` message
     types.
   * Introduced command line parameter to specify working directory.
-  * ...
 * v0.1:
   * Support for Unix Domain Sockets/AF\_UNIX sockets; use command line
     parameter `-i` for an AF\_INET socket and `-u` for an AF\_UNIX socket
