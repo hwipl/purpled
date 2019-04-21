@@ -934,6 +934,36 @@ gboolean respond_account_down(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+gboolean respond_account_status(client* ptr, char *mesg, char **args,
+				gpointer user_data) {
+	PurpleAccount *account = user_data;
+	gchar *buf;
+
+	if (!args[1])
+		return TRUE;
+
+	/* check subcommand */
+	if (!strcmp(args[1], "get")) {
+		/* retrieve current status */
+		PurplePresence *pres = purple_account_get_presence(account);
+		PurpleStatus *stat = purple_presence_get_active_status(pres);
+		int n = g_list_index(purple_accounts_get_all(), account);
+
+		buf = g_strdup_printf("status: account %d status: %s\r\n", n,
+				      purple_status_get_name(stat));
+		purpld_client_send(ptr, buf);
+		g_free(buf);
+		return TRUE;
+	} else if (!strcmp(args[1], "set")) {
+		/* set current status */
+		if (!args[2])
+			return TRUE;
+		purple_account_set_status(account, args[2], TRUE, 0, NULL);
+	}
+
+	return TRUE;
+}
+
 gboolean respond_account_set(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	PurpleAccount *account = user_data;
@@ -1095,6 +1125,7 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args,
 		{ "delete",	respond_account_delete,		0 },
 		{ "up",		respond_account_up,		0 },
 		{ "down",	respond_account_down,		0 },
+		{ "status",	respond_account_status,		0 },
 		{ "enable",	respond_account_enable,		0 },
 		{ "disable",	respond_account_disable,	0 },
 		/* Set */
