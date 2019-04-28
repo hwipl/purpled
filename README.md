@@ -31,6 +31,11 @@ In case you want to use the old Makefiles etc., you can find them in the `orig`
 directory.
 
 ## Changes:
+
+* v0.3:
+  * Add account status message
+    * Set current status with: `account <id> status set <status>`
+    * Get current status with: `account <id> status get`
 * v0.2:
   * Switched to meson and made purpled installable with it. Old Makefiles etc.
     are in folder `orig`.
