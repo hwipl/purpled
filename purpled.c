@@ -781,6 +781,44 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+/* get a list of chat rooms */
+gboolean respond_account_chat_list(client* ptr, char *mesg, char **args,
+				   gpointer user_data) {
+	PurpleAccount *account = user_data;
+	GList *chats = purple_get_chats();
+	int account_id;
+	GList *iter;
+
+	/* get account id */
+	account_id = g_list_index(purple_accounts_get_all(), account);
+
+	/* get list of chat rooms and send each back as reply */
+	for (iter = g_list_first(chats); iter; iter=iter->next) {
+		PurpleConversation *conv = iter->data;
+		PurpleConvChat *chat_conv;
+		int conv_acc_id;
+		gchar *reply;
+
+		/* skip other accounts; only show requested account's chats */
+		conv_acc_id = g_list_index(purple_accounts_get_all(),
+					   conv->account);
+		if (conv_acc_id != account_id)
+			continue;
+
+		/* construct message and send it */
+		chat_conv = purple_conversation_get_chat_data(conv);
+		reply = g_strdup_printf("chat: list: %d %s %s %s\r\n",
+					conv_acc_id, conv->name, conv->name,
+					chat_conv->nick);
+
+		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
+		purpld_inform_client(account, reply);
+		g_free(reply);
+	}
+
+	return TRUE;
+}
+
 /* send a message to a chat room */
 gboolean respond_account_chat_send(client* ptr, char *mesg, char **args,
 				   gpointer user_data) {
@@ -826,6 +864,9 @@ gboolean respond_account_chat_send(client* ptr, char *mesg, char **args,
 /* chat command parsing; calls other chat command functions */
 gboolean respond_account_chat(client* ptr, char *mesg, char **args,
 			      gpointer user_data) {
+	/* chat list */
+	if (!strncmp(args[1], "list", 4))
+		return respond_account_chat_list(ptr, mesg, args, user_data);
 	/* chat join */
 	if (!strncmp(args[1], "join", 4))
 		return respond_account_join(ptr, mesg, &args[1], user_data);
