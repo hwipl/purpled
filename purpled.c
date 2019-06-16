@@ -829,6 +829,9 @@ gboolean respond_account_chat(client* ptr, char *mesg, char **args,
 	/* chat join */
 	if (!strncmp(args[1], "join", 4))
 		return respond_account_join(ptr, mesg, &args[1], user_data);
+	/* chat part */
+	if (!strncmp(args[1], "part", 4))
+		return respond_account_part(ptr, mesg, &args[1], user_data);
 	/* chat send */
 	if (!strncmp(args[1], "send", 4))
 		return respond_account_chat_send(ptr, mesg, args, user_data);
