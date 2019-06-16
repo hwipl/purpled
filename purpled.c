@@ -781,6 +781,57 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+/* send a message to a chat room */
+gboolean respond_account_chat_send(client* ptr, char *mesg, char **args,
+				   gpointer user_data) {
+	PurpleAccount *account = user_data;
+	PurpleConnection *con = purple_account_get_connection(account);
+	PurpleConvChat *chat_conv = NULL;
+	PurpleConversation *conv = NULL;
+	int chat_id;
+
+	/* check if account is ready */
+	if (!con || purple_account_is_connecting(account)) {
+		gchar *error = g_strdup_printf("error: Failed to message "
+					       "\"%s\": Account %s offline\r\n",
+			args[2], account->username);
+		purpld_client_send(ptr, error);
+		g_free(error);
+		return TRUE;
+	}
+
+	/* find existing or start new conversation */
+	conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,
+						     args[2], account);
+	if (!conv)
+		conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account,
+					       args[2]);
+
+	/* send message */
+	PurpleMessageFlags flags = PURPLE_MESSAGE_SEND;
+	time_t mtime = time(NULL);
+
+	chat_conv = purple_conversation_get_chat_data(conv);
+	chat_id = purple_conv_chat_get_id(chat_conv);
+
+	serv_chat_send(con, chat_id, args[3], flags);
+
+	/* display own message? */
+	if (purple_account_get_ui_bool(account, UI_ID, "log_self", FALSE))
+		purple_conversation_write(conv, args[2], args[3], flags, mtime);
+
+	return TRUE;
+}
+
+/* chat command parsing; calls other chat command functions */
+gboolean respond_account_chat(client* ptr, char *mesg, char **args,
+			      gpointer user_data) {
+	/* chat send */
+	if (!strncmp(args[1], "send", 4))
+		return respond_account_chat_send(ptr, mesg, args, user_data);
+	return TRUE;
+}
+
 gboolean respond_account_check(client* ptr, char *mesg, char **args,
 			       gpointer user_data) {
 	PurpleAccount *account = user_data;
@@ -1142,7 +1193,8 @@ gboolean respond_process_account(client* ptr, char *mesg, char **args,
 		{ "forget",	respond_account_forget,		0 },
 		{ "check",	respond_account_check,		0 },
 		{ "collect",	respond_account_collect,	0 },
-		{ "buddies",	respond_account_buddies,	0 }
+		{ "buddies",	respond_account_buddies,	0 },
+		{ "chat",	respond_account_chat,		4 },
 	};
 	static int cli_len2 = sizeof(cli_commands2) / sizeof(PurpldCommandOps);
 
