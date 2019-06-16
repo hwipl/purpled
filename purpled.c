@@ -861,6 +861,46 @@ gboolean respond_account_chat_send(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+/* get a list of users in a chat room */
+gboolean respond_account_chat_users(client* ptr, char *mesg, char **args,
+				    gpointer user_data) {
+	PurpleAccount *account = user_data;
+	PurpleConvChat *chat_conv = NULL;
+	PurpleConversation *conv = NULL;
+	GList *users = NULL;
+	int account_id;
+	GList *iter;
+
+	/* get account id */
+	account_id = g_list_index(purple_accounts_get_all(), account);
+
+	/* find existing chat conversation */
+	conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,
+						     args[2], account);
+	if (!conv)
+		return TRUE;
+	chat_conv = purple_conversation_get_chat_data(conv);
+
+	/* get list of users in chat room and send each back as reply */
+	users = purple_conv_chat_get_users(chat_conv);
+	for (iter = g_list_first(users); iter; iter=iter->next) {
+		PurpleConvChatBuddy *user = iter->data;
+		gchar *reply;
+
+		/* construct message and send it */
+		reply = g_strdup_printf("chat: user: %d %s %s %s %s\r\n",
+					account_id, conv->name,
+					user->alias ? user->alias : user->name,
+					user->name, "join");
+
+		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
+		purpld_inform_client(account, reply);
+		g_free(reply);
+	}
+
+	return TRUE;
+}
+
 /* chat command parsing; calls other chat command functions */
 gboolean respond_account_chat(client* ptr, char *mesg, char **args,
 			      gpointer user_data) {
@@ -876,6 +916,10 @@ gboolean respond_account_chat(client* ptr, char *mesg, char **args,
 	/* chat send */
 	if (!strncmp(args[1], "send", 4))
 		return respond_account_chat_send(ptr, mesg, args, user_data);
+	/* chat users */
+	if (!strncmp(args[1], "users", 5))
+		return respond_account_chat_users(ptr, mesg, args, user_data);
+
 	return TRUE;
 }
 
