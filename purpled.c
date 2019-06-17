@@ -901,6 +901,31 @@ gboolean respond_account_chat_users(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+/* invite a user to a chat room */
+gboolean respond_account_chat_invite(client* ptr, char *mesg, char **args,
+				     gpointer user_data) {
+	PurpleAccount *account = user_data;
+	PurpleConnection *con = purple_account_get_connection(account);
+	PurpleConvChat *chat_conv = NULL;
+	PurpleConversation *conv = NULL;
+	char *invite_msg = NULL;
+	char *user = args[3];
+	int chat_id;
+
+	/* find existing conversation */
+	conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT,
+						     args[2], account);
+	if (!conv)
+		return TRUE;
+
+	/* invite user */
+	chat_conv = purple_conversation_get_chat_data(conv);
+	chat_id = purple_conv_chat_get_id(chat_conv);
+	serv_chat_invite(con, chat_id, invite_msg, user);
+
+	return TRUE;
+}
+
 /* chat command parsing; calls other chat command functions */
 gboolean respond_account_chat(client* ptr, char *mesg, char **args,
 			      gpointer user_data) {
@@ -919,6 +944,9 @@ gboolean respond_account_chat(client* ptr, char *mesg, char **args,
 	/* chat users */
 	if (!strncmp(args[1], "users", 5))
 		return respond_account_chat_users(ptr, mesg, args, user_data);
+	/* chat invite */
+	if (!strncmp(args[1], "invite", 6))
+		return respond_account_chat_invite(ptr, mesg, args, user_data);
 
 	return TRUE;
 }
