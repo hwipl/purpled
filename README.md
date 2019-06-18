@@ -32,6 +32,14 @@ directory.
 
 ## Changes:
 
+* devel:
+  * Add chat room messages:
+    * List joined chat rooms: `account <id> chat list`
+    * Join a chat room: `account <id> chat join <chat_room>`
+    * Leave a chat room: `account <id> chat part <chat_room>`
+    * List users in a chat room: `account <id> chat users <chat_room>`
+    * Invite user to a chat room: `account <id> chat invite <chat_room> <user>`
+    * Send a message to a chat room: `account <id> chat send <chat_room> <msg>`
 * v0.3:
   * Add account status message
     * Set current status with: `account <id> status set <status>`
