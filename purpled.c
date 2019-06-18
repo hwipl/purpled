@@ -368,6 +368,39 @@ purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 	g_free(buf);
 }
 
+/* chat users have joined a chat room */
+static void
+purpld_chat_add_users(PurpleConversation *conv, GList *cbuddies,
+		      gboolean new_arrivals)
+{
+	PurpleAccount *account;
+	int account_id;
+	GList *iter;
+
+	if (!new_arrivals)
+		return;
+
+	/* get account and its id */
+	account = purple_conversation_get_account(conv);
+	account_id = g_list_index(purple_accounts_get_all(), account);
+
+	/* send list of new chat users to client */
+	for (iter = g_list_first(cbuddies); iter; iter=iter->next) {
+		PurpleConvChatBuddy *user = iter->data;
+		gchar *reply;
+
+		/* construct message and send it */
+		reply = g_strdup_printf("chat: user: %d %s %s %s %s\r\n",
+					account_id, conv->name,
+					user->alias ? user->alias : user->name,
+					user->name, "join");
+
+		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
+		purpld_inform_client(account, reply);
+		g_free(reply);
+	}
+}
+
 static PurpleConversationUiOps purpld_conv_uiops =
 {
 	NULL,                      /* create_conversation  */
@@ -375,7 +408,7 @@ static PurpleConversationUiOps purpld_conv_uiops =
 	NULL,                      /* write_chat           */
 	NULL,                      /* write_im             */
 	purpld_write_conv,         /* write_conv           */
-	NULL,                      /* chat_add_users       */
+	purpld_chat_add_users,     /* chat_add_users       */
 	NULL,                      /* chat_rename_user     */
 	NULL,                      /* chat_remove_users    */
 	NULL,                      /* chat_update_user     */
