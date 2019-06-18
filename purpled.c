@@ -401,6 +401,34 @@ purpld_chat_add_users(PurpleConversation *conv, GList *cbuddies,
 	}
 }
 
+/* chat users have left a chat room */
+static void
+purpld_chat_remove_users(PurpleConversation *conv, GList *users)
+{
+	PurpleAccount *account;
+	int account_id;
+	GList *iter;
+
+	/* get account and its id */
+	account = purple_conversation_get_account(conv);
+	account_id = g_list_index(purple_accounts_get_all(), account);
+
+	/* send list of parted chat users to client */
+	for (iter = g_list_first(users); iter; iter=iter->next) {
+		char *user_name = iter->data;
+		gchar *reply;
+
+		/* construct message and send it */
+		reply = g_strdup_printf("chat: user: %d %s %s %s %s\r\n",
+					account_id, conv->name, user_name,
+					user_name, "part");
+
+		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
+		purpld_inform_client(account, reply);
+		g_free(reply);
+	}
+}
+
 static PurpleConversationUiOps purpld_conv_uiops =
 {
 	NULL,                      /* create_conversation  */
@@ -410,7 +438,7 @@ static PurpleConversationUiOps purpld_conv_uiops =
 	purpld_write_conv,         /* write_conv           */
 	purpld_chat_add_users,     /* chat_add_users       */
 	NULL,                      /* chat_rename_user     */
-	NULL,                      /* chat_remove_users    */
+	purpld_chat_remove_users,  /* chat_remove_users    */
 	NULL,                      /* chat_update_user     */
 	NULL,                      /* present              */
 	NULL,                      /* has_focus            */
