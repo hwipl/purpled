@@ -429,6 +429,31 @@ purpld_chat_remove_users(PurpleConversation *conv, GList *users)
 	}
 }
 
+/* chat user has changed its name */
+static void
+purpld_chat_rename_user(PurpleConversation *conv, const char *old_name, const
+			char *new_name, const char *new_alias)
+{
+	PurpleAccount *account;
+	int account_id;
+	gchar *reply;
+
+	/* get account and its id */
+	account = purple_conversation_get_account(conv);
+	account_id = g_list_index(purple_accounts_get_all(), account);
+
+
+	/* construct message and send it */
+	reply = g_strdup_printf("chat: user: %d %s %s %s %s\r\n",
+				account_id, conv->name,
+				new_alias ? new_alias : new_name,
+				old_name, "rename");
+
+	//TODO: resolve bottle-neck - inform_client shouldn't be in loop
+	purpld_inform_client(account, reply);
+	g_free(reply);
+}
+
 static PurpleConversationUiOps purpld_conv_uiops =
 {
 	NULL,                      /* create_conversation  */
@@ -437,7 +462,7 @@ static PurpleConversationUiOps purpld_conv_uiops =
 	NULL,                      /* write_im             */
 	purpld_write_conv,         /* write_conv           */
 	purpld_chat_add_users,     /* chat_add_users       */
-	NULL,                      /* chat_rename_user     */
+	purpld_chat_rename_user,   /* chat_rename_user     */
 	purpld_chat_remove_users,  /* chat_remove_users    */
 	NULL,                      /* chat_update_user     */
 	NULL,                      /* present              */
