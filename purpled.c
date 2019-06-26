@@ -1122,12 +1122,17 @@ gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
 				 gpointer user_data) {
 	/* Returns the buddy list for the specified account */
 	PurpleAccount *account = user_data;
-
-	GSList *buddies;
+	GList *chats = purple_get_chats();
 	PurpleBuddy *buddy;
-	gchar *buf;
-	int n;
+	GSList *buddies;
+	int account_id;
+	gchar *reply;
+	GList *iter;
 
+	/* get account id */
+	account_id = g_list_index(purple_accounts_get_all(), account);
+
+	/* get list of buddies and send each back as reply */
 	for (buddies = purple_find_buddies(account, NULL); buddies;
 	     buddies = buddies->next){
 		buddy = buddies->data;
@@ -1141,16 +1146,36 @@ gboolean respond_account_buddies(client* ptr, char *mesg, char **args,
 			continue;
 		}
 
-		n = g_list_index(purple_accounts_get_all(), account);
-		buf = g_strdup_printf("buddy: %d status: %s name: %s alias: %s",
-				      n, purple_status_get_name(status),
-				      purple_buddy_get_name(buddy),
-				      purple_buddy_get_alias(buddy));
-		purpld_client_send(ptr, buf);
-		purpld_client_send(ptr, "\r\n");
-		g_free(buf);
+		reply = g_strdup_printf("buddy: %d status: %s name: %s "
+					"alias: %s\r\n", account_id,
+					purple_status_get_name(status),
+					purple_buddy_get_name(buddy),
+					purple_buddy_get_alias(buddy));
+		purpld_client_send(ptr, reply);
+		g_free(reply);
 	}
 	g_slist_free(buddies);
+
+	/* get list of chat rooms and send each back as reply */
+	for (iter = g_list_first(chats); iter; iter=iter->next) {
+		PurpleConversation *conv = iter->data;
+		int conv_acc_id;
+
+		/* skip other accounts; only show requested account's chats */
+		conv_acc_id = g_list_index(purple_accounts_get_all(),
+					   conv->account);
+		if (conv_acc_id != account_id)
+			continue;
+
+		/* construct message and send it */
+		reply = g_strdup_printf("buddy: %d status: %s name: %s "
+					"alias: %s\r\n", conv_acc_id,
+					"GROUP_CHAT", conv->name, conv->name);
+
+		purpld_client_send(ptr, reply);
+		g_free(reply);
+	}
+
 	return TRUE;
 }
 
