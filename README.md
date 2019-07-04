@@ -32,7 +32,7 @@ directory.
 
 ## Changes:
 
-* devel:
+* v0.4:
   * Add chat room messages:
     * List joined chat rooms: `account <id> chat list`
     * Join a chat room: `account <id> chat join <chat_room>`
