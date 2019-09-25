@@ -1939,6 +1939,27 @@ int init_libpurple(void) {
 	return 0;
 }
 
+/* quit purpled */
+static void quit_purpled() {
+	GList* iter;
+
+	for (iter = g_list_first(clients); iter;
+	     iter = iter->next) {
+		client* cli = iter->data;
+		close (cli->connfd);
+		g_free(cli);
+	}
+
+	close (listenfd);
+	g_list_free(clients);
+
+	fclose(stdout);
+	fclose(stderr);
+
+	uninit_path();
+	exit(EXIT_SUCCESS);
+}
+
 static void
 handle_server_signals(int sig)
 {
@@ -1946,24 +1967,7 @@ handle_server_signals(int sig)
 		case SIGTERM:
 		case SIGINT:
 			printf("Received signal (%d), Quitting\n", sig);
-
-			GList* iter;
-
-			for (iter = g_list_first(clients); iter;
-			     iter = iter->next) {
-				client* cli = iter->data;
-				close (cli->connfd);
-				g_free(cli);
-			}
-			close (listenfd);
-			g_list_free(clients);
-
-			fclose(stdout);
-			fclose(stderr);
-
-			//g_main_loop_quit (0);
-			uninit_path();
-			exit(EXIT_SUCCESS);
+			quit_purpled();
 	}
 }
 
