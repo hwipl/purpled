@@ -136,6 +136,7 @@ static PurpleEventLoopUiOps glib_eventloops =
 void client_command(client* ptr, char *mesg);
 void purpld_proccess_client(client* ptr);
 void purpld_client_send(client* ptr, const char *mesg);
+static void quit_purpled();
 
 int total_c = 0;
 int listenfd;
@@ -712,6 +713,13 @@ gboolean respond_generic_dummy(client* ptr, char *mesg, char **args,
 gboolean respond_command_bye(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	ptr->kill = TRUE;
+	return TRUE;
+}
+
+/* handle "quit" command, quit purpled */
+gboolean respond_command_quit(client* ptr, char *mesg, char **args,
+			     gpointer user_data) {
+	quit_purpled();
 	return TRUE;
 }
 
@@ -1488,6 +1496,7 @@ void client_command(client* ptr, char *mesg) {
 		{ "account",		respond_process_account,	2 },
 		{ "acc",		respond_process_account,	2 }, //acc - shorthand for account
 		{ "bye",		respond_command_bye,		0 },
+		{ "quit",		respond_command_quit,		0 },
 		{ "ver",		respond_command_ver,		0 },
 		{ "who",		respond_command_who,		0 }
 	 };
