@@ -708,6 +708,13 @@ gboolean respond_generic_dummy(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+/* handle "bye" command, disconnect client */
+gboolean respond_command_bye(client* ptr, char *mesg, char **args,
+			     gpointer user_data) {
+	ptr->kill = TRUE;
+	return TRUE;
+}
+
 gboolean respond_command_ver(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	gchar *buf;
@@ -1480,6 +1487,7 @@ void client_command(client* ptr, char *mesg) {
 		{ "http_offset=",	respond_http_command,		2 },
 		{ "account",		respond_process_account,	2 },
 		{ "acc",		respond_process_account,	2 }, //acc - shorthand for account
+		{ "bye",		respond_command_bye,		0 },
 		{ "ver",		respond_command_ver,		0 },
 		{ "who",		respond_command_who,		0 }
 	 };
