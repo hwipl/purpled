@@ -724,7 +724,7 @@ gboolean respond_command_bye(client* ptr, char *mesg, char **args,
 
 /* handle "quit" command, quit purpled */
 gboolean respond_command_quit(client* ptr, char *mesg, char **args,
-			     gpointer user_data) {
+			      gpointer user_data) {
 	quit_purpled();
 	return TRUE;
 }
