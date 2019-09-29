@@ -729,6 +729,74 @@ gboolean respond_command_quit(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+/* handle "help" command, return help message */
+gboolean respond_command_help(client* ptr, char *mesg, char **args,
+			      gpointer user_data) {
+	static char *help_msg =
+		"List of commands and their description:\n"
+		"account list\n"
+		"    list all accounts and their account ids.\n"
+		"account add <protocol> <user> <password>\n"
+		"    add a new account for chat protocol <protocol> with "
+		"user name <user> and\n"
+		"    the password <password>. The supported chat protocol(s) "
+		"are backend\n"
+		"    specific. The user name is chat protocol specific. "
+		"An account id is\n"
+		"    assigned to the account that can be shown with "
+		"\"account list\".\n"
+		"account <id> delete\n"
+		"    delete the account with the account id <id>.\n"
+		"account <id> buddies [online]\n"
+		"    list all buddies on the account with the "
+		"account id <id>. Optionally, show\n"
+		"    only online buddies with the extra parameter \"online\".\n"
+		"account <id> collect\n"
+		"    collect all messages received on the account with "
+		"the account id <id>.\n"
+		"account <id> send <user> <msg>\n"
+		"    send a message to the user <user> on the account with "
+		"the account id <id>.\n"
+		"account <id> status get\n"
+		"    get the status of the account with the account id <id>.\n"
+		"account <id> status set <status>\n"
+		"    set the status of the account with the account id <id> "
+		"to <status>.\n"
+		"account <id> chat list\n"
+		"    list all group chats on the account with "
+		"the account id <id>.\n"
+		"account <id> chat join <chat>\n"
+		"    join the group chat <chat> on the account with "
+		"the account id <id>.\n"
+		"account <id> chat part <chat>\n"
+		"    leave the group chat <chat> on the account with "
+		"the account id <id>.\n"
+		"account <id> chat send <chat> <msg>\n"
+		"    send the message <msg> to the group chat <chat> on "
+		"the account with the\n"
+		"    account id <id>.\n"
+		"account <id> chat users <chat>\n"
+		"    list the users in the group chat <chat> on "
+		"the account with the\n"
+		"    account id <id>.\n"
+		"account <id> chat invite <chat> <user>\n"
+		"    invite the user <user> to the group chat <chat> on "
+		"the account with the\n"
+		"    account id <id>.\n"
+		"bye\n"
+		"    disconnect from backend\n"
+		"quit\n"
+		"    quit backend\n"
+		"help\n"
+		"    show this help";
+	gchar *buf;
+
+	buf = g_strdup_printf("info: %s\r\n", help_msg);
+	purpld_client_send(ptr, buf);
+	g_free(buf);
+	return TRUE;
+}
+
 gboolean respond_command_ver(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	gchar *buf;
@@ -1503,6 +1571,7 @@ void client_command(client* ptr, char *mesg) {
 		{ "acc",		respond_process_account,	2 }, //acc - shorthand for account
 		{ "bye",		respond_command_bye,		0 },
 		{ "quit",		respond_command_quit,		0 },
+		{ "help",		respond_command_help,		0 },
 		{ "ver",		respond_command_ver,		0 },
 		{ "who",		respond_command_who,		0 }
 	 };
