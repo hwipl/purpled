@@ -21,15 +21,11 @@
 
 #include "purple.h"
 
-//#include <sys/mman.h>
-//	#include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-//#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
-//#include <fcntl.h>
 
 #include <pwd.h>
 
@@ -41,7 +37,6 @@
 #include <unistd.h>
 
 #include "defines.h"
-//#include "config.h"
 
 /**
  * The following eventloop functions are used in both pidgin and purple-text.
@@ -205,13 +200,7 @@ purpld_notify_userinfo(PurpleConnection *gc, const char *who,
 	     iter=iter->next) {
 		PurpleNotifyUserInfoEntry *ent = iter->data;
 		gchar *info = g_strdup_printf(
-				//"%s = %s\r\n",
 				"info: %d %s %s = %s\r\n", n, who,
-				//"message: %d (%s) %d %s: %s = %s\r\n", n,
-				//purple_conversation_get_name(conv),
-				//who,
-				//(int) time(NULL),
-				//who,
 				purple_notify_user_info_entry_get_label(ent),
 				purple_notify_user_info_entry_get_value(ent));
 		//TODO: resolve bottle-neck - inform_client shouldn't be in loop
@@ -219,9 +208,6 @@ purpld_notify_userinfo(PurpleConnection *gc, const char *who,
 		g_free(info);
 	}
 
-	//info = purple_notify_user_info_get_text_with_newline(user_info, "<BR>");
-	//	printf ("we got some info! [%d] %s\n", g_list_length(user_info->data), info);
-	//	g_free(info);
 	return NULL;
 }
 
@@ -326,7 +312,6 @@ purpld_request_action(const char *title, const char *primary,
 			done = TRUE;
 			break;
 		}
-		//printf ("\n %s \n", text);
 	}
 	if (!done) {
 		printf (" [fail] \n");
@@ -801,7 +786,8 @@ gboolean respond_command_ver(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	gchar *buf;
 
-	buf = g_strdup_printf ("info: purpled %d.%d.%d/%c, libpurple %d.%d.%d\r\n",
+	buf = g_strdup_printf ("info: purpled %d.%d.%d/%c, "
+			       "libpurple %d.%d.%d\r\n",
 			       PURPLED_VERSION_MAJOR, PURPLED_VERSION_MINOR,
 			       PURPLED_VERSION_MICRO, PURPLED_VERSION_STATE,
 			       PURPLE_MAJOR_VERSION, PURPLE_MINOR_VERSION,
@@ -854,21 +840,15 @@ gboolean respond_account_join(client* ptr, char *mesg, char **args,
 		purple_blist_add_chat(chat, NULL, NULL);
 	} else {
 		comps = purple_chat_get_components(chat);
-		/*GList *keys = g_hash_table_get_keys(comps);
-		for (; keys; keys = keys->next) {
-		 printf("%s \n", keys->data);
-		}*/
 	}
 	serv_join_chat(con, comps);
-	//if (comps != NULL)
-		//g_hash_table_destroy(comps);
+
 	return TRUE;
 }
 
 gboolean respond_account_part(client* ptr, char *mesg, char **args,
 			      gpointer user_data) {
 	PurpleAccount *account = user_data;
-	/* PurpleConnection *con = purple_account_get_connection(account); */
 	PurpleChat *chat = NULL;
 	PurpleConversation *conv = NULL;
 
@@ -914,7 +894,8 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 
 	if (!con || purple_account_is_connecting(account)) {
 		gchar *error = g_strdup_printf(
-			"error: Failed to message \"%s\": Account %s offline\r\n",
+			"error: Failed to message \"%s\": "
+			"Account %s offline\r\n",
 			args[1], account->username);
 		purpld_client_send(ptr, error);
 		g_free(error);
@@ -948,8 +929,6 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 
 	serv_send_im (con, args[1], args[2], flags);
 
-	//purple_conv_im_write 	(	 conv, args[1],  args[2], flags, mtime );
-	//purple_conversation_present(conv);
 	if (conv)
 		purple_conversation_write (conv, args[1], args[2], flags, mtime);
 
@@ -1144,8 +1123,6 @@ gboolean respond_account_check(client* ptr, char *mesg, char **args,
 	PurpleBuddyIcon *bicon = purple_buddy_icons_find(account, args[1]);
 	if (bicon) {
 		gchar *info = g_strdup_printf(
-			//"message: %d (%s) %d %s: Buddy-Icon = %s %s\r\n", n,
-			//args[1], (int) time(NULL), args[1],
 			"info: %d Buddy-Icon = %s %s\r\n", n,
 			purple_buddy_icon_get_checksum(bicon),
 			purple_buddy_icon_get_extension(bicon));
@@ -1337,7 +1314,6 @@ gboolean respond_account_status(client* ptr, char *mesg, char **args,
 gboolean respond_account_set(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	PurpleAccount *account = user_data;
-	/*PurpleSavedStatus *status;*/
 	gchar extra = '*';
 	gchar *buf;
 	int n;
@@ -1377,9 +1353,6 @@ gboolean respond_account_set(client* ptr, char *mesg, char **args,
 		}
 	}
 
-	//account = purple_account_find(username, info->id);
-	//PurpleAccount * 	purple_accounts_find (const char *name, const char *protocol)
-
 	n = g_list_index(purple_accounts_get_all(), account);
 	buf = g_strdup_printf("info: %d %c %s = %s\r\n", n, extra, args[1],
 			      args[2]);
@@ -1400,14 +1373,8 @@ gboolean respond_account_add(client* ptr, char *mesg, char **args,
 		PurplePlugin *plugin = iter->data;
 		PurplePluginInfo *info = plugin->info;
 
-		/*if (info && info->name) {
-			printf("\t%d: %s\n", i++, info->name);
-			//names = g_list_append(names, info->id);
-		}*/
-
 		if (!g_ascii_strcasecmp(args[1], info->name)) {
 			PurpleAccount *account;
-			/*PurpleSavedStatus *status;*/
 
 			/* Create the account */
 			account = purple_account_new(args[2], info->id);
@@ -1438,9 +1405,6 @@ gboolean respond_account_list(client* ptr, char *mesg, char **args,
 	GList *iter;
 	int n;
 	char tmp[PD_STRING];
-
-	//sprintf(tmp, "Accounts: \n");
-	//purpld_client_send(ptr, tmp);
 
 	n = 0;
 	for (iter = purple_accounts_get_all(); iter; iter = iter->next) {
@@ -1582,8 +1546,6 @@ void client_command(client* ptr, char *mesg) {
 		return;
 	if (ptr->conntype == CONNECTION_HTTP) strcrep(mesg, '+', ' ');
 
-	//printf("DOING COMMAND \"%s\" \n", mesg);
-
 	purpld_parse_command(ptr, mesg, cli_commands, cli_len, 0);
 
 	/* Hack -- if he is not going to auth, just assign some id */
@@ -1612,15 +1574,12 @@ void purpld_client_send(client* ptr, const char *mesg) {
 
 void purpld_proccess_client(client* ptr) {
 	int i;
-	int len, off/*, first*/;
-	/*gboolean complete = FALSE;*/
+	int len, off;
 	gboolean several = FALSE;
 
 	char mesg[PD_LARGE_BUFFER]; //mini-buffer
 
 	len = strlen(ptr->buffer);
-	//if (ptr->content_length && len >= ptr->content_length) {}
-	//if (len > PD_BUFFER_LENGTH) { printf ("FATAL ERROR"); exit; }
 
 	/* No command ready, just buffer */
 	if ((off = strrpos(ptr->buffer, '\n', len)) < 0) return;
@@ -1656,7 +1615,6 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition,
 	int connfd = g_io_channel_unix_get_fd(src);
 	int n;
 	char mesg[PD_SMALL_BUFFER];
-	/*char tmp[PD_TINY_STRING];*/
 
 	client *client_ptr =
 		(g_list_find_custom(clients, &connfd, find_client))->data;
@@ -1669,7 +1627,6 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition,
 	if (n <= 0 || !client_ptr) {
 		total_c--;
 		printf("Connection [%d] closed\n", connfd);
-		//perror("Receive");
 
 		close(connfd);
 
@@ -1697,17 +1654,13 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition,
 
 static gboolean purpld_accept_client(GIOChannel *src, GIOCondition condition,
 				     gpointer null2)
-//static void	purpld_accept_client (gpointer null1, gint null2, PurpleInputCondition gic)
-	//int listenfd = null2;
 {
 	struct sockaddr_in cliaddr;
 	static socklen_t clilen = sizeof(cliaddr);
 	int listenfd = g_io_channel_unix_get_fd(src);
 	int connfd;
-	/*char mesg[100];*/
 
 	connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
-	//if (connfd == -1)	continue;
 
 	glib_input_add(connfd, PURPLE_GLIB_READ_COND, purpld_handle_client);
 
@@ -1737,8 +1690,7 @@ auto_join_chats(gpointer data)
 			node = purple_blist_node_next(node, FALSE)) {
 		if (PURPLE_BLIST_NODE_IS_CHAT(node)) {
 			PurpleChat *chat = (PurpleChat*)node;
-			if (purple_chat_get_account(chat) == account/* &&
-					purple_blist_node_get_bool(node, "gnt-autojoin")*/)
+			if (purple_chat_get_account(chat) == account)
 				serv_join_chat(
 					purple_account_get_connection(account),
 					purple_chat_get_components(chat));
@@ -1876,12 +1828,6 @@ int init_paths(char *work_dir) {
 	purpld_dirs.file_dir = g_strdup(path);
 	g_free(path);
 
-/*
-	printf("Home Dir: %s \n", purpld_dirs.home_dir);
-	printf("Log=File: %s \n", purpld_dirs.log_file);
-	printf("Pid=File: %s \n", purpld_dirs.pid_file);
-	printf("File Dir: %s \n", purpld_dirs.file_dir);
-*/
 	return 1;
 }
 
@@ -1908,8 +1854,7 @@ void init_server_inet(in_port_t listen_port, struct in_addr listen_addr) {
 		perror("Listen Failed");
 		exit(EXIT_FAILURE);
 	}
-	//purple_glib_input_add(listenfd, PURPLE_INPUT_READ,
-	//purpld_accept_client, NULL);
+
 	glib_input_add(listenfd, PURPLE_GLIB_READ_COND, purpld_accept_client);
 }
 
@@ -1961,7 +1906,7 @@ int init_libpurple(void) {
 	 * 	- initialize the ui components for all the modules.
 	 * 	- uninitialize the ui components for all the modules when the core terminates.
 	 */
-//	purple_core_set_ui_ops(&purpld_core_uiops);
+	// purple_core_set_ui_ops(&purpld_core_uiops);
 	purple_conversations_set_ui_ops(&purpld_conv_uiops);
 	purple_notify_set_ui_ops(&purpld_notify_uiops);
 	purple_request_set_ui_ops(&purpld_request_uiops);
@@ -1977,8 +1922,8 @@ int init_libpurple(void) {
 	if (!purple_core_init(UI_ID)) {
 		/* Initializing the core failed. Terminate. */
 		fprintf(stderr,
-				"libpurple initialization failed. Dumping core.\n"
-				"Please report this!\n");
+			"libpurple initialization failed. Dumping core.\n"
+			"Please report this!\n");
 		abort();
 	}
 
@@ -2061,15 +2006,18 @@ void print_usage(void)
 		"OPTIONS\n"
 		"-d		run purpled a unix daemon\n"
 		"-i		use AF_INET/TCP socket\n"
-		"-pPORT		specify on which TCP port purpled listen. Default: 32000\n"
-		"-lLISTEN_IP	specify on which IP address purpled listen. Default: any 0.0.0.0\n"
+		"-pPORT		specify on which TCP port purpled listen. "
+		"Default: 32000\n"
+		"-lLISTEN_IP	specify on which IP address purpled listen. "
+		"Default: any 0.0.0.0\n"
 		"-u		use AF_UNIX socket\n"
 		"-wDIR		specify working directory of purpled\n"
 		"-h		display this help and exit\n\n"
 		"EXAMPLES\n"
 		"purpled, listen on port 4242 and stay in the terminal.\n"
 		" $ purpled -i -p4242\n"
-		"purpled, listen on IP address 127.0.0.1 and start as a deamon.\n"
+		"purpled, listen on IP address 127.0.0.1 and start as "
+		"a deamon.\n"
 		" $ purpled -i -l127.0.0.1 -d\n");
 }
 
