@@ -340,23 +340,34 @@ purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 			const char *message, PurpleMessageFlags flags,
 			time_t mtime)
 {
+	gchar *text, *escaped_newlines, *escaped;
 	PurpleAccount *account;
 	gchar *buf;
 	int n;
 
 	account = purple_conversation_get_account(conv);
 
+	/* remove all html tags, then escape all special chars */
+	text = purple_markup_strip_html(message);
+	escaped_newlines = purple_markup_escape_text(text, strlen(text));
+	escaped = purple_strdup_withhtml(escaped_newlines);
+
 	n = g_list_index(purple_accounts_get_all(), account);
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
 		buf = g_strdup_printf("chat: msg: %d %s %d %s %s\r\n", n,
 				      purple_conversation_get_name(conv),
-				      (int) mtime, who, message);
+				      (int) mtime, who, escaped);
 	} else {
 		buf = g_strdup_printf("message: %d %s %d %s %s\r\n", n,
 				      purple_conversation_get_name(conv),
-				      (int) mtime, who, message);
+				      (int) mtime, who, escaped);
 	}
 	purpld_inform_client(account, buf);
+
+	/* free all string buffers */
+	g_free(escaped_newlines);
+	g_free(escaped);
+	g_free(text);
 	g_free(buf);
 }
 
