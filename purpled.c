@@ -902,6 +902,7 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 	PurpleConnection *con = purple_account_get_connection(account);
 	PurpleConversation *conv = NULL;
 	PurpleBuddy *buddy;
+	gchar *escaped;
 
 	if (!con || purple_account_is_connecting(account)) {
 		gchar *error = g_strdup_printf(
@@ -938,7 +939,10 @@ gboolean respond_account_send(client* ptr, char *mesg, char **args,
 	PurpleMessageFlags flags = PURPLE_MESSAGE_SEND;
 	time_t mtime = time(NULL);
 
-	serv_send_im (con, args[1], args[2], flags);
+	/* unescape message and send it */
+	escaped = purple_unescape_html(args[2]);
+	serv_send_im(con, args[1], escaped, flags);
+	g_free(escaped);
 
 	if (conv)
 		purple_conversation_write (conv, args[1], args[2], flags, mtime);
@@ -991,6 +995,7 @@ gboolean respond_account_chat_send(client* ptr, char *mesg, char **args,
 	PurpleConnection *con = purple_account_get_connection(account);
 	PurpleConvChat *chat_conv = NULL;
 	PurpleConversation *conv = NULL;
+	gchar *escaped;
 	int chat_id;
 
 	/* check if account is ready */
@@ -1017,7 +1022,9 @@ gboolean respond_account_chat_send(client* ptr, char *mesg, char **args,
 	chat_conv = purple_conversation_get_chat_data(conv);
 	chat_id = purple_conv_chat_get_id(chat_conv);
 
-	serv_chat_send(con, chat_id, args[3], flags);
+	escaped = purple_unescape_html(args[3]);
+	serv_chat_send(con, chat_id, escaped, flags);
+	g_free(escaped);
 
 	/* display own message? */
 	if (purple_account_get_ui_bool(account, UI_ID, "log_self", FALSE))
