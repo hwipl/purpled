@@ -354,15 +354,22 @@ purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 
 	n = g_list_index(purple_accounts_get_all(), account);
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT) {
+		PurpleConvChat *data = purple_conversation_get_chat_data(conv);
+		const char *nick = purple_conv_chat_get_nick(data);
+
 		buf = g_strdup_printf("chat: msg: %d %s %d %s %s\r\n", n,
 				      purple_conversation_get_name(conv),
 				      (int) mtime, who, escaped);
+
+		/* only show messages from others, not own messages */
+		if (!purple_strequal(who, nick))
+			purpld_inform_client(account, buf);
 	} else {
 		buf = g_strdup_printf("message: %d %s %d %s %s\r\n", n,
 				      purple_conversation_get_name(conv),
 				      (int) mtime, who, escaped);
+		purpld_inform_client(account, buf);
 	}
-	purpld_inform_client(account, buf);
 
 	/* free all string buffers */
 	g_free(escaped_newlines);
