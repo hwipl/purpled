@@ -32,14 +32,14 @@ directory.
 
 ## Changes:
 
-* devel:
+* v0.5:
   * Add new commands:
     * `bye`: disconnect from purpled.
     * `quit`: quit purpled.
     * `help`: show list of commands and their description.
   * Add and use "chat msg" message format for group chat messages
   * Make "message" message format more similar to other nuqql backends.
-  * Cleanups
+  * Cleanups and fixes
 * v0.4:
   * Add chat room messages:
     * List joined chat rooms: `account <id> chat list`
