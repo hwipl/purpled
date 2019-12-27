@@ -12,7 +12,9 @@ jobs:
       with:
         python-version: '3.x'
     - run: pip install meson ninja
-    - run: sudo apt-get --assume-yes install libpurple-dev
+    - run: |
+        sudo apt-get update
+        sudo apt-get --assume-yes install libpurple-dev
     - run: meson setup build
       env:
         CC: gcc
