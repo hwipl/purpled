@@ -35,6 +35,7 @@
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
+#include <argp.h>
 
 #include "defines.h"
 
@@ -44,6 +45,9 @@
  */
 #define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
 #define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
+
+
+const char *argp_program_version = "purpled v0.5.0";
 
 typedef struct _PurpleGLibIOClosure {
 	PurpleInputFunction function;
@@ -2046,18 +2050,44 @@ void print_usage(void)
 		" $ purpled -i -l127.0.0.1 -d\n");
 }
 
+/* definition of command line argument options */
+static struct argp_option options[] = {
+	{ 0 }
+};
+
+/* struct for command line arguments */
+struct arguments {
+};
+
+/* parse a single command line argument */
+static error_t parse_opt (int key, char *arg, struct argp_state *state) {
+	struct arguments *arguments = state->input;
+
+	switch (key) {
+	}
+	return 0;
+}
+
+/* command line argument parser */
+static struct argp argp = {options, parse_opt, 0, 0};
+
 int main(int argc, char *argv[])
 {
 	gboolean run_as_daemon = TRUE;
 	gboolean inet_socket = FALSE;
 	gboolean unix_socket = FALSE;
 	struct in_addr listen_addr;
+	struct arguments arguments;
 	in_port_t listen_port;
 	char *work_dir = NULL;
 	char *param;
 	int i;
 
 	run_as_daemon = FALSE;
+
+	/* parse command line arguments */
+	argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
 	listen_port = htons (32000);
 	listen_addr.s_addr = htonl (INADDR_ANY);
 	for (i = 1; i < argc; i++)
