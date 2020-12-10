@@ -2052,11 +2052,13 @@ void print_usage(void)
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
+	{"daemon",  'd', 0,      0,  "run purpled as a unix daemon"},
 	{ 0 }
 };
 
 /* struct for command line arguments */
 struct arguments {
+	int daemon;
 };
 
 /* parse a single command line argument */
@@ -2064,6 +2066,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	struct arguments *arguments = state->input;
 
 	switch (key) {
+	case 'd':
+		arguments->daemon = 1;
+		break;
 	}
 	return 0;
 }
@@ -2073,7 +2078,6 @@ static struct argp argp = {options, parse_opt, 0, 0};
 
 int main(int argc, char *argv[])
 {
-	gboolean run_as_daemon = TRUE;
 	gboolean inet_socket = FALSE;
 	gboolean unix_socket = FALSE;
 	struct in_addr listen_addr;
@@ -2083,7 +2087,8 @@ int main(int argc, char *argv[])
 	char *param;
 	int i;
 
-	run_as_daemon = FALSE;
+	/* set command line argument defaults */
+	arguments.daemon = 0;
 
 	/* parse command line arguments */
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
@@ -2095,11 +2100,7 @@ int main(int argc, char *argv[])
 		param = argv[i];
 		if (param[0] == '-')
 		{
-			if (param[1] == 'd')
-			{
-				run_as_daemon = TRUE;
-			}
-			else if (param[1] == 'h')
+			if (param[1] == 'h')
 			{
 				print_usage();
 				return (EXIT_SUCCESS);
@@ -2168,7 +2169,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Bye-bye terminal */
-	if (run_as_daemon)
+	if (arguments.daemon)
 		daemonize();
 
 	/* Look around */
