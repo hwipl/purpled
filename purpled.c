@@ -2056,6 +2056,7 @@ static struct argp_option options[] = {
 	{"unix-socket", 'u', 0, 0, "use AF_UNIX socket"},
 	{"inet-socket", 'i', 0, 0, "use AF_INET/TCP socket"},
 	{"address", 'l', "LISTEN_IP", 0, "listen on IP address LISTEN_IP"},
+	{"port", 'p', "PORT", 0, "listen on TCP port PORT"},
 	{0}
 };
 
@@ -2065,11 +2066,13 @@ struct arguments {
 	int unix_socket;
 	int inet_socket;
 	struct in_addr listen_addr;
+	in_port_t listen_port;
 };
 
 /* parse a single command line argument */
 static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	struct arguments *arguments = state->input;
+	int port;
 
 	switch (key) {
 	case 'd':
@@ -2088,6 +2091,16 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 			return -1;
 		}
 		break;
+	case 'p':
+		port = atoi(arg);
+		if ((port <= 1) || (port > 66536)) {
+			fprintf(stderr, "invalid listen port: %s\n", arg);
+			argp_usage(state);
+			return -1;
+		} else {
+			arguments->listen_port = htons((short) port);
+		}
+		break;
 	}
 	return 0;
 }
@@ -2098,7 +2111,6 @@ static struct argp argp = {options, parse_opt, 0, 0};
 int main(int argc, char *argv[])
 {
 	struct arguments arguments;
-	in_port_t listen_port;
 	char *work_dir = NULL;
 	char *param;
 	int i;
@@ -2108,11 +2120,11 @@ int main(int argc, char *argv[])
 	arguments.unix_socket = 0;
 	arguments.inet_socket = 0;
 	arguments.listen_addr.s_addr = htonl(INADDR_ANY);
+	arguments.listen_port = htons(32000);
 
 	/* parse command line arguments */
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-	listen_port = htons (32000);
 	for (i = 1; i < argc; i++)
 	{
 		param = argv[i];
@@ -2122,23 +2134,6 @@ int main(int argc, char *argv[])
 			{
 				print_usage();
 				return (EXIT_SUCCESS);
-			}
-			else if (param[1] == 'p')
-			{
-				int port;
-				port = atoi (&param[2]);
-				if ((port <= 1) || (port > 66536))
-				{
-					fprintf(stderr,
-						"invalid listen port: %s\n",
-						&param[2]);
-					print_usage();
-					return (EXIT_FAILURE);
-				}
-				else
-				{
-					listen_port = htons ((short) port);
-				}
 			}
 			else if (param[1] == 'w')
 			{
@@ -2183,7 +2178,7 @@ int main(int argc, char *argv[])
 
 	/* Init server part */
 	if (arguments.inet_socket)
-		init_server_inet(listen_port, arguments.listen_addr);
+		init_server_inet(arguments.listen_port, arguments.listen_addr);
 	if (arguments.unix_socket)
 		init_server_unix();
 
