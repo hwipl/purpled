@@ -2055,6 +2055,7 @@ static struct argp_option options[] = {
 	{"daemon", 'd', 0, 0, "run purpled as a unix daemon"},
 	{"unix-socket", 'u', 0, 0, "use AF_UNIX socket"},
 	{"inet-socket", 'i', 0, 0, "use AF_INET/TCP socket"},
+	{"address", 'l', "LISTEN_IP", 0, "listen on IP address LISTEN_IP"},
 	{0}
 };
 
@@ -2063,6 +2064,7 @@ struct arguments {
 	int daemon;
 	int unix_socket;
 	int inet_socket;
+	struct in_addr listen_addr;
 };
 
 /* parse a single command line argument */
@@ -2079,6 +2081,13 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case 'i':
 		arguments->inet_socket = 1;
 		break;
+	case 'l':
+		if (!inet_aton(arg, &arguments->listen_addr)) {
+			fprintf(stderr, "invalid listen address: %s\n", arg);
+			argp_usage(state);
+			return -1;
+		}
+		break;
 	}
 	return 0;
 }
@@ -2088,7 +2097,6 @@ static struct argp argp = {options, parse_opt, 0, 0};
 
 int main(int argc, char *argv[])
 {
-	struct in_addr listen_addr;
 	struct arguments arguments;
 	in_port_t listen_port;
 	char *work_dir = NULL;
@@ -2099,12 +2107,12 @@ int main(int argc, char *argv[])
 	arguments.daemon = 0;
 	arguments.unix_socket = 0;
 	arguments.inet_socket = 0;
+	arguments.listen_addr.s_addr = htonl(INADDR_ANY);
 
 	/* parse command line arguments */
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
 	listen_port = htons (32000);
-	listen_addr.s_addr = htonl (INADDR_ANY);
 	for (i = 1; i < argc; i++)
 	{
 		param = argv[i];
@@ -2114,17 +2122,6 @@ int main(int argc, char *argv[])
 			{
 				print_usage();
 				return (EXIT_SUCCESS);
-			}
-			else if (param[1] == 'l')
-			{
-				if (!inet_aton (&param[2], &listen_addr))
-				{
-					fprintf(stderr,
-						"invalid listen address: %s\n",
-						&param[2]);
-					print_usage();
-					return (EXIT_FAILURE);
-				}
 			}
 			else if (param[1] == 'p')
 			{
@@ -2186,7 +2183,7 @@ int main(int argc, char *argv[])
 
 	/* Init server part */
 	if (arguments.inet_socket)
-		init_server_inet(listen_port, listen_addr);
+		init_server_inet(listen_port, arguments.listen_addr);
 	if (arguments.unix_socket)
 		init_server_unix();
 
