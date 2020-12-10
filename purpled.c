@@ -2029,27 +2029,6 @@ handle_server_signals(int sig)
 	}
 }
 
-void print_usage(void)
-{
-	fprintf(stderr, "Usage: purpled [-d] [-pPORT] [-lLISTEN_IP]\n"
-		"OPTIONS\n"
-		"-d		run purpled a unix daemon\n"
-		"-i		use AF_INET/TCP socket\n"
-		"-pPORT		specify on which TCP port purpled listen. "
-		"Default: 32000\n"
-		"-lLISTEN_IP	specify on which IP address purpled listen. "
-		"Default: any 0.0.0.0\n"
-		"-u		use AF_UNIX socket\n"
-		"-wDIR		specify working directory of purpled\n"
-		"-h		display this help and exit\n\n"
-		"EXAMPLES\n"
-		"purpled, listen on port 4242 and stay in the terminal.\n"
-		" $ purpled -i -p4242\n"
-		"purpled, listen on IP address 127.0.0.1 and start as "
-		"a deamon.\n"
-		" $ purpled -i -l127.0.0.1 -d\n");
-}
-
 /* definition of command line argument options */
 static struct argp_option options[] = {
 	{"daemon", 'd', 0, 0, "run purpled as a unix daemon"},
@@ -2106,7 +2085,17 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case 'w':
 		arguments->work_dir = arg;
 		break;
+	case ARGP_KEY_END:
+		/* either AF_INET or AF_UNIX must be selected */
+		if (!arguments->unix_socket && !arguments->inet_socket) {
+			fprintf(stderr, "missing -i or -u\n");
+			argp_usage(state);
+		}
+		break;
+	default:
+		return ARGP_ERR_UNKNOWN;
 	}
+
 	return 0;
 }
 
@@ -2128,13 +2117,6 @@ int main(int argc, char *argv[])
 	/* parse command line arguments */
 	if (argp_parse(&argp, argc, argv, 0, 0, &arguments)) {
 		return (EXIT_FAILURE);
-	}
-
-	/* either AF_INET or AF_UNIX must be selected */
-	if (!arguments.unix_socket && !arguments.inet_socket) {
-		fprintf(stderr, "missing -i or -u\n");
-		print_usage();
-		return(EXIT_FAILURE);
 	}
 
 	/* Bye-bye terminal */
