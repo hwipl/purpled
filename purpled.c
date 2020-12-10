@@ -2052,13 +2052,15 @@ void print_usage(void)
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
-	{"daemon",  'd', 0,      0,  "run purpled as a unix daemon"},
-	{ 0 }
+	{"daemon", 'd', 0, 0, "run purpled as a unix daemon"},
+	{"unix-socket", 'u', 0, 0, "use AF_UNIX socket"},
+	{0}
 };
 
 /* struct for command line arguments */
 struct arguments {
 	int daemon;
+	int unix_socket;
 };
 
 /* parse a single command line argument */
@@ -2068,6 +2070,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	switch (key) {
 	case 'd':
 		arguments->daemon = 1;
+		break;
+	case 'u':
+		arguments->unix_socket = 1;
 		break;
 	}
 	return 0;
@@ -2079,7 +2084,6 @@ static struct argp argp = {options, parse_opt, 0, 0};
 int main(int argc, char *argv[])
 {
 	gboolean inet_socket = FALSE;
-	gboolean unix_socket = FALSE;
 	struct in_addr listen_addr;
 	struct arguments arguments;
 	in_port_t listen_port;
@@ -2089,6 +2093,7 @@ int main(int argc, char *argv[])
 
 	/* set command line argument defaults */
 	arguments.daemon = 0;
+	arguments.unix_socket = 0;
 
 	/* parse command line arguments */
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
@@ -2104,10 +2109,6 @@ int main(int argc, char *argv[])
 			{
 				print_usage();
 				return (EXIT_SUCCESS);
-			}
-			else if (param[1] == 'u') {
-				/* AF_UNIX socket */
-				unix_socket = TRUE;
 			}
 			else if (param[1] == 'i') {
 				/* AF_INET socket */
@@ -2162,7 +2163,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* either AF_INET or AF_UNIX must be selected */
-	if (!unix_socket && !inet_socket) {
+	if (!arguments.unix_socket && !inet_socket) {
 		fprintf(stderr, "missing -i or -u\n");
 		print_usage();
 		return(EXIT_FAILURE);
@@ -2185,7 +2186,7 @@ int main(int argc, char *argv[])
 	/* Init server part */
 	if (inet_socket)
 		init_server_inet(listen_port, listen_addr);
-	if (unix_socket)
+	if (arguments.unix_socket)
 		init_server_unix();
 
 	/* Init client(s) part */
