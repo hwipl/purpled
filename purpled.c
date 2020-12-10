@@ -2116,8 +2116,6 @@ static struct argp argp = {options, parse_opt, 0, 0};
 int main(int argc, char *argv[])
 {
 	struct arguments arguments;
-	char *param;
-	int i;
 
 	/* set command line argument defaults */
 	arguments.daemon = 0;
@@ -2128,32 +2126,8 @@ int main(int argc, char *argv[])
 	arguments.work_dir = NULL;
 
 	/* parse command line arguments */
-	argp_parse(&argp, argc, argv, 0, 0, &arguments);
-
-	for (i = 1; i < argc; i++)
-	{
-		param = argv[i];
-		if (param[0] == '-')
-		{
-			if (param[1] == 'h')
-			{
-				print_usage();
-				return (EXIT_SUCCESS);
-			}
-			else
-			{
-				fprintf(stderr, "unknown parameter: %s\n",
-					param);
-				print_usage();
-				return (EXIT_FAILURE);
-			}
-		}
-		else
-		{
-			fprintf(stderr, "invalid parameter: %s\n", param);
-			print_usage();
-			return (EXIT_FAILURE);
-		}
+	if (argp_parse(&argp, argc, argv, 0, 0, &arguments)) {
+		return (EXIT_FAILURE);
 	}
 
 	/* either AF_INET or AF_UNIX must be selected */
