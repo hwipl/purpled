@@ -2057,6 +2057,7 @@ static struct argp_option options[] = {
 	{"inet-socket", 'i', 0, 0, "use AF_INET/TCP socket"},
 	{"address", 'l', "LISTEN_IP", 0, "listen on IP address LISTEN_IP"},
 	{"port", 'p', "PORT", 0, "listen on TCP port PORT"},
+	{"dir", 'w', "DIR", 0, "set working directory to DIR"},
 	{0}
 };
 
@@ -2067,6 +2068,7 @@ struct arguments {
 	int inet_socket;
 	struct in_addr listen_addr;
 	in_port_t listen_port;
+	char *work_dir;
 };
 
 /* parse a single command line argument */
@@ -2101,6 +2103,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 			arguments->listen_port = htons((short) port);
 		}
 		break;
+	case 'w':
+		arguments->work_dir = arg;
+		break;
 	}
 	return 0;
 }
@@ -2111,7 +2116,6 @@ static struct argp argp = {options, parse_opt, 0, 0};
 int main(int argc, char *argv[])
 {
 	struct arguments arguments;
-	char *work_dir = NULL;
 	char *param;
 	int i;
 
@@ -2121,6 +2125,7 @@ int main(int argc, char *argv[])
 	arguments.inet_socket = 0;
 	arguments.listen_addr.s_addr = htonl(INADDR_ANY);
 	arguments.listen_port = htons(32000);
+	arguments.work_dir = NULL;
 
 	/* parse command line arguments */
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
@@ -2134,10 +2139,6 @@ int main(int argc, char *argv[])
 			{
 				print_usage();
 				return (EXIT_SUCCESS);
-			}
-			else if (param[1] == 'w')
-			{
-				work_dir = &param[2];
 			}
 			else
 			{
@@ -2167,7 +2168,7 @@ int main(int argc, char *argv[])
 		daemonize();
 
 	/* Look around */
-	init_paths(work_dir);
+	init_paths(arguments.work_dir);
 
 	/* Handle signals */
 	signal(SIGINT, handle_server_signals);
