@@ -1887,8 +1887,7 @@ void init_server_inet(in_port_t listen_port, struct in_addr listen_addr) {
 	glib_input_add(listenfd, PURPLE_GLIB_READ_COND, purpld_accept_client);
 }
 
-void init_server_unix(void) {
-	char *sock_name = "purpled.sock";
+void init_server_unix(char *sock_name) {
 	struct sockaddr_un servaddr;
 	char *socket_path;
 
@@ -2029,6 +2028,8 @@ handle_server_signals(int sig)
 	}
 }
 
+#define KEY_SOCKFILE 1024
+
 /* definition of command line argument options */
 static struct argp_option options[] = {
 	{"daemon", 'd', 0, 0, "run purpled as a unix daemon"},
@@ -2036,6 +2037,7 @@ static struct argp_option options[] = {
 	{"inet-socket", 'i', 0, 0, "use AF_INET/TCP socket"},
 	{"address", 'l', "LISTEN_IP", 0, "listen on IP address LISTEN_IP"},
 	{"port", 'p', "PORT", 0, "listen on TCP port PORT"},
+	{"sockfile", KEY_SOCKFILE, "FILE", 0, "use AF_UNIX socket file in DIR"},
 	{"dir", 'w', "DIR", 0, "set working directory to DIR"},
 	{0}
 };
@@ -2047,6 +2049,7 @@ struct arguments {
 	int inet_socket;
 	struct in_addr listen_addr;
 	in_port_t listen_port;
+	char *sockfile;
 	char *work_dir;
 };
 
@@ -2085,6 +2088,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case 'w':
 		arguments->work_dir = arg;
 		break;
+	case KEY_SOCKFILE:
+		arguments->sockfile = arg;
+		break;
 	case ARGP_KEY_END:
 		/* either AF_INET or AF_UNIX must be selected */
 		if (!arguments->unix_socket && !arguments->inet_socket) {
@@ -2112,6 +2118,7 @@ int main(int argc, char *argv[])
 	arguments.inet_socket = 0;
 	arguments.listen_addr.s_addr = htonl(INADDR_ANY);
 	arguments.listen_port = htons(32000);
+	arguments.sockfile = "purpled.sock";
 	arguments.work_dir = NULL;
 
 	/* parse command line arguments */
@@ -2137,7 +2144,7 @@ int main(int argc, char *argv[])
 	if (arguments.inet_socket)
 		init_server_inet(arguments.listen_port, arguments.listen_addr);
 	if (arguments.unix_socket)
-		init_server_unix();
+		init_server_unix(arguments.sockfile);
 
 	/* Init client(s) part */
 	init_libpurple();
