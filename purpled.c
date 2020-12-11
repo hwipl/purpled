@@ -2032,7 +2032,7 @@ handle_server_signals(int sig)
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
-	{"daemon", 'd', 0, 0, "run purpled as a unix daemon"},
+	{"daemonize", 'd', 0, 0, "run purpled as a unix daemon"},
 	{"unix-socket", 'u', 0, 0, "use AF_UNIX socket"},
 	{"inet-socket", 'i', 0, 0, "use AF_INET/TCP socket"},
 	{"address", 'l', "LISTEN_IP", 0, "listen on IP address LISTEN_IP"},
