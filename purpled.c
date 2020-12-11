@@ -2028,13 +2028,16 @@ handle_server_signals(int sig)
 	}
 }
 
-#define KEY_SOCKFILE 1024
+#define KEY_AF		1024
+#define KEY_SOCKFILE	1025
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
 	{"daemonize", 'd', 0, 0, "run purpled as a unix daemon"},
 	{"unix-socket", 'u', 0, 0, "use AF_UNIX socket"},
 	{"inet-socket", 'i', 0, 0, "use AF_INET/TCP socket"},
+	{"af", KEY_AF, "AF", 0, "set socket address family: \"inet\" for "
+		"AF_INET or \"unix\" for AF_UNIX"},
 	{"address", 'l', "LISTEN_IP", 0, "listen on IP address LISTEN_IP"},
 	{"port", 'p', "PORT", 0, "listen on TCP port PORT"},
 	{"sockfile", KEY_SOCKFILE, "FILE", 0, "use AF_UNIX socket file in DIR"},
@@ -2087,6 +2090,13 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 		break;
 	case 'w':
 		arguments->work_dir = arg;
+		break;
+	case KEY_AF:
+		if (!strncmp(arg, "unix", 4)) {
+			arguments->unix_socket = 1;
+		} else {
+			arguments->inet_socket = 1;
+		}
 		break;
 	case KEY_SOCKFILE:
 		arguments->sockfile = arg;
