@@ -2032,6 +2032,7 @@ handle_server_signals(int sig)
 #define KEY_SOCKFILE	1025
 #define KEY_LOGLEVEL	1026
 #define KEY_NOHISTORY	1027
+#define KEY_PUSHACCS	1028
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
@@ -2046,6 +2047,7 @@ static struct argp_option options[] = {
 	{"dir", 'w', "DIR", 0, "set working directory to DIR"},
 	{"loglevel", KEY_LOGLEVEL, "LEVEL", 0, "set logging level to LEVEL"},
 	{"disable-history", KEY_NOHISTORY, 0, 0, "disable message history"},
+	{"push-accounts", KEY_PUSHACCS, 0, 0, "push accounts to client"},
 	{0}
 };
 
@@ -2060,6 +2062,7 @@ struct arguments {
 	char *work_dir;
 	char *loglevel;
 	int disable_history;
+	int push_accounts;
 };
 
 /* parse a single command line argument */
@@ -2113,6 +2116,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case KEY_NOHISTORY:
 		arguments->disable_history = 1;
 		break;
+	case KEY_PUSHACCS:
+		arguments->push_accounts = 1;
+		break;
 	case ARGP_KEY_END:
 		/* either AF_INET or AF_UNIX must be selected */
 		if (!arguments->unix_socket && !arguments->inet_socket) {
@@ -2144,6 +2150,7 @@ int main(int argc, char *argv[])
 	arguments.work_dir = NULL;
 	arguments.loglevel = "warn";
 	arguments.disable_history = 0;
+	arguments.push_accounts = 0;
 
 	/* parse command line arguments */
 	if (argp_parse(&argp, argc, argv, 0, 0, &arguments)) {
