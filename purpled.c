@@ -1460,13 +1460,11 @@ gboolean purpld_parse_command(client* ptr, char *mesg, PurpldCommandOps* ops,
 	/* Paranoia to ease ops-coder's life later */
 	if (!mesg || mesg[0] == '\0')
 		return FALSE;
+
 	gboolean done = FALSE;
-	int i, j, n;
-	n = strlen(mesg);
-	for (i = 0; i < ops_len; i++) {
+	for (int i = 0; i < ops_len; i++) {
 		if (!g_ascii_strncasecmp(mesg, ops[i].name,
-					 (j = strlen(ops[i].name))) &&
-		    (n <= j || mesg[j] == ' ')) {
+					 strlen(ops[i].name))) {
 			gchar **chunks = g_strsplit(mesg, " ", ops[i].max);
 			done = (ops[i].call_back)(ptr, mesg, chunks, user_data);
 			g_strfreev(chunks);
