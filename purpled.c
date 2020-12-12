@@ -47,7 +47,7 @@
 #define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
 
 
-const char *argp_program_version = "purpled v0.5.0";
+const char *argp_program_version = PURPLED_VERSION;
 
 typedef struct _PurpleGLibIOClosure {
 	PurpleInputFunction function;
@@ -808,12 +808,9 @@ gboolean respond_command_ver(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	gchar *buf;
 
-	buf = g_strdup_printf ("info: purpled v%d.%d.%d%s "
-			       "(libpurple %d.%d.%d)\r\n",
-			       PURPLED_VERSION_MAJOR, PURPLED_VERSION_MINOR,
-			       PURPLED_VERSION_PATCH, PURPLED_VERSION_EXTEN,
-			       PURPLE_MAJOR_VERSION, PURPLE_MINOR_VERSION,
-			       PURPLE_MICRO_VERSION);
+	buf = g_strdup_printf ("info: %s (libpurple %d.%d.%d)\r\n",
+			       PURPLED_VERSION, PURPLE_MAJOR_VERSION,
+			       PURPLE_MINOR_VERSION, PURPLE_MICRO_VERSION);
 
 	purpld_client_send(ptr, buf);
 	g_free(buf);
