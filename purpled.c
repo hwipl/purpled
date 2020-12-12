@@ -2031,6 +2031,7 @@ handle_server_signals(int sig)
 #define KEY_AF		1024
 #define KEY_SOCKFILE	1025
 #define KEY_LOGLEVEL	1026
+#define KEY_NOHISTORY	1027
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
@@ -2044,6 +2045,7 @@ static struct argp_option options[] = {
 	{"sockfile", KEY_SOCKFILE, "FILE", 0, "use AF_UNIX socket file in DIR"},
 	{"dir", 'w', "DIR", 0, "set working directory to DIR"},
 	{"loglevel", KEY_LOGLEVEL, "LEVEL", 0, "set logging level to LEVEL"},
+	{"disable-history", KEY_NOHISTORY, 0, 0, "disable message history"},
 	{0}
 };
 
@@ -2057,6 +2059,7 @@ struct arguments {
 	char *sockfile;
 	char *work_dir;
 	char *loglevel;
+	int disable_history;
 };
 
 /* parse a single command line argument */
@@ -2107,6 +2110,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case KEY_LOGLEVEL:
 		arguments->loglevel = arg;
 		break;
+	case KEY_NOHISTORY:
+		arguments->disable_history = 1;
+		break;
 	case ARGP_KEY_END:
 		/* either AF_INET or AF_UNIX must be selected */
 		if (!arguments->unix_socket && !arguments->inet_socket) {
@@ -2137,6 +2143,7 @@ int main(int argc, char *argv[])
 	arguments.sockfile = "purpled.sock";
 	arguments.work_dir = NULL;
 	arguments.loglevel = "warn";
+	arguments.disable_history = 0;
 
 	/* parse command line arguments */
 	if (argp_parse(&argp, argc, argv, 0, 0, &arguments)) {
