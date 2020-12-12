@@ -2030,6 +2030,7 @@ handle_server_signals(int sig)
 
 #define KEY_AF		1024
 #define KEY_SOCKFILE	1025
+#define KEY_LOGLEVEL	1026
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
@@ -2042,6 +2043,7 @@ static struct argp_option options[] = {
 	{"port", 'p', "PORT", 0, "listen on TCP port PORT"},
 	{"sockfile", KEY_SOCKFILE, "FILE", 0, "use AF_UNIX socket file in DIR"},
 	{"dir", 'w', "DIR", 0, "set working directory to DIR"},
+	{"loglevel", KEY_LOGLEVEL, "LEVEL", 0, "set logging level to LEVEL"},
 	{0}
 };
 
@@ -2054,6 +2056,7 @@ struct arguments {
 	in_port_t listen_port;
 	char *sockfile;
 	char *work_dir;
+	char *loglevel;
 };
 
 /* parse a single command line argument */
@@ -2101,6 +2104,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case KEY_SOCKFILE:
 		arguments->sockfile = arg;
 		break;
+	case KEY_LOGLEVEL:
+		arguments->loglevel = arg;
+		break;
 	case ARGP_KEY_END:
 		/* either AF_INET or AF_UNIX must be selected */
 		if (!arguments->unix_socket && !arguments->inet_socket) {
@@ -2130,6 +2136,7 @@ int main(int argc, char *argv[])
 	arguments.listen_port = htons(32000);
 	arguments.sockfile = "purpled.sock";
 	arguments.work_dir = NULL;
+	arguments.loglevel = "warn";
 
 	/* parse command line arguments */
 	if (argp_parse(&argp, argc, argv, 0, 0, &arguments)) {
