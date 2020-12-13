@@ -718,11 +718,11 @@ gboolean respond_generic_dummy(client* ptr, char *mesg, char **args,
 
 	int i = 0;
 
-	printf ("Command parser sample function.\n");
+	log_info("Command parser sample function.\n");
 	for (i = 0; args[i]; i++) {
 		if (ptr->conntype == CONNECTION_IRC && args[i][0] == ':')
 			strleft(args[i], strlen(args[i]),1);
-		printf ("%c) %s\n", 63+i, args[i]);
+		log_info("%c) %s\n", 63+i, args[i]);
 	}
 
 	return TRUE;
@@ -1411,7 +1411,7 @@ gboolean respond_account_add(client* ptr, char *mesg, char **args,
 			/* Create the account */
 			account = purple_account_new(args[2], info->id);
 			if (!account) {
-				printf("Failed to create an account\n");
+				log_error("Failed to create an account\n");
 				return TRUE;
 			}
 			/* Get the password for the account */
@@ -1649,14 +1649,15 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition,
 	client *client_ptr =
 		(g_list_find_custom(clients, &connfd, find_client))->data;
 	if (!client_ptr) {
-		printf("Fatal Error: Client not found while handling client \n");
+		log_error("Fatal Error: Client not found while handling "
+			  "client\n");
 		exit(EXIT_FAILURE);
 	}
 
 	n = recv(connfd, mesg, PD_SMALL_BUFFER, 0);
 	if (n <= 0 || !client_ptr) {
 		total_c--;
-		printf("Connection [%d] closed\n", connfd);
+		log_info("Connection [%d] closed\n", connfd);
 
 		close(connfd);
 
@@ -1671,7 +1672,7 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition,
 	purpld_proccess_client(client_ptr);
 
 	if (client_ptr->kill == TRUE) {
-		printf("Connection [%d] closed\n", connfd);
+		log_info("Connection [%d] closed\n", connfd);
 
 		close(connfd);
 
@@ -1694,8 +1695,8 @@ static gboolean purpld_accept_client(GIOChannel *src, GIOCondition condition,
 
 	glib_input_add(connfd, PURPLE_GLIB_READ_COND, purpld_handle_client);
 
-	printf("Connection [%d] from %s established (online: %d)\n", connfd,
-	       inet_ntoa(cliaddr.sin_addr), total_c );
+	log_info("Connection [%d] from %s established (online: %d)\n", connfd,
+		 inet_ntoa(cliaddr.sin_addr), total_c );
 
 	client* new_client;
 	new_client = g_malloc0 (sizeof (struct client));
@@ -1745,8 +1746,8 @@ static void
 signed_on(PurpleConnection *gc, gpointer null)
 {
 	PurpleAccount *account = purple_connection_get_account(gc);
-	printf("Account connected: %s %s\n", account->username,
-	       account->protocol_id);
+	log_info("Account connected: %s %s\n", account->username,
+		 account->protocol_id);
 	g_idle_add(auto_join_chats, gc);
 }
 
@@ -1758,10 +1759,10 @@ signed_off(PurpleConnection *gc, gpointer null)
 		purple_account_get_current_error(account);
 	int recon = purple_account_get_ui_int(account, UI_ID,
 					      "reconnect_timeout", 0) * 60;
-	printf("Account %s disconnected: %s %s\n",
-	       (!err ? "happily" : "unhappily"), account->username,
-	       account->protocol_id);
-	if (err) printf("%d %s\n", err->type, err->description);
+	log_info("Account %s disconnected: %s %s\n",
+		 (!err ? "happily" : "unhappily"), account->username,
+		 account->protocol_id);
+	if (err) log_error("%d %s\n", err->type, err->description);
 	if (err && recon) g_timeout_add(recon, auto_reconnect, gc);
 }
 
@@ -1950,9 +1951,8 @@ int init_libpurple(void) {
 	 * is used by stuff that depends on this ui, for example the ui-specific plugins. */
 	if (!purple_core_init(UI_ID)) {
 		/* Initializing the core failed. Terminate. */
-		fprintf(stderr,
-			"libpurple initialization failed. Dumping core.\n"
-			"Please report this!\n");
+		log_error("libpurple initialization failed. Dumping core.\n"
+			  "Please report this!\n");
 		abort();
 	}
 
@@ -2024,7 +2024,7 @@ handle_server_signals(int sig)
 	switch (sig) {
 		case SIGTERM:
 		case SIGINT:
-			printf("Received signal (%d), Quitting\n", sig);
+			log_info("Received signal (%d), Quitting\n", sig);
 			quit_purpled();
 	}
 }
@@ -2177,7 +2177,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 		break;
 	case 'l':
 		if (!inet_aton(arg, &arguments->listen_addr)) {
-			fprintf(stderr, "invalid listen address: %s\n", arg);
+			log_error("invalid listen address: %s\n", arg);
 			argp_usage(state);
 			return -1;
 		}
@@ -2185,7 +2185,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case 'p':
 		port = atoi(arg);
 		if ((port <= 1) || (port > 66536)) {
-			fprintf(stderr, "invalid listen port: %s\n", arg);
+			log_error("invalid listen port: %s\n", arg);
 			argp_usage(state);
 			return -1;
 		} else {
@@ -2217,7 +2217,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case ARGP_KEY_END:
 		/* either AF_INET or AF_UNIX must be selected */
 		if (!arguments->unix_socket && !arguments->inet_socket) {
-			fprintf(stderr, "missing -i or -u\n");
+			log_error("missing -i or -u\n");
 			argp_usage(state);
 		}
 		break;
@@ -2254,7 +2254,7 @@ int main(int argc, char *argv[])
 
 	/* parse log level command line argument */
 	if (parse_loglevel(arguments.loglevel)) {
-		fprintf(stderr, "error parsing log level\n");
+		log_error("error parsing log level\n");
 		return (EXIT_FAILURE);
 	}
 
