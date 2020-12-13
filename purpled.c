@@ -2023,6 +2023,47 @@ handle_server_signals(int sig)
 	}
 }
 
+/* definition of log levels */
+enum loglevel {
+	LOGLEVEL_NONE,
+	LOGLEVEL_DEBUG,
+	LOGLEVEL_INFO,
+	LOGLEVEL_WARN,
+	LOGLEVEL_ERROR,
+};
+
+/* global log level */
+enum loglevel loglevel = LOGLEVEL_NONE;
+
+/* parse loglevel string and set global logging level */
+int parse_loglevel(char* level) {
+	if (!level) {
+		return 0;
+	}
+
+	/* check known log levels */
+	if (!strncmp(level, "debug", 5)) {
+		loglevel = LOGLEVEL_DEBUG;
+		return 0;
+	}
+	if (!strncmp(level, "info", 4)) {
+		loglevel = LOGLEVEL_INFO;
+		return 0;
+	}
+	if (!strncmp(level, "warn", 4)) {
+		loglevel = LOGLEVEL_WARN;
+		return 0;
+	}
+	if (!strncmp(level, "error", 5)) {
+		loglevel = LOGLEVEL_ERROR;
+		return 0;
+	}
+
+	/* unknown log level */
+	return -1;
+}
+
+/* command line argument parsing keys */
 #define KEY_AF		1024
 #define KEY_SOCKFILE	1025
 #define KEY_LOGLEVEL	1026
@@ -2149,6 +2190,12 @@ int main(int argc, char *argv[])
 
 	/* parse command line arguments */
 	if (argp_parse(&argp, argc, argv, 0, 0, &arguments)) {
+		return (EXIT_FAILURE);
+	}
+
+	/* parse log level command line argument */
+	if (parse_loglevel(arguments.loglevel)) {
+		fprintf(stderr, "error parsing log level\n");
 		return (EXIT_FAILURE);
 	}
 
