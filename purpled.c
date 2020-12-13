@@ -49,6 +49,12 @@
 
 const char *argp_program_version = PURPLED_VERSION;
 
+/* logging functions */
+void log_debug(const char *format, ...);
+void log_info(const char *format, ...);
+void log_warn(const char *format, ...);
+void log_error(const char *format, ...);
+
 typedef struct _PurpleGLibIOClosure {
 	PurpleInputFunction function;
 	guint result;
@@ -2061,6 +2067,59 @@ int parse_loglevel(char* level) {
 
 	/* unknown log level */
 	return -1;
+}
+
+/* base log function called from others */
+void _log(const char *level, const char *format, va_list args) {
+	char buf[256];
+
+	/* append loglevel and print message */
+	snprintf(buf, sizeof(buf), "%s: %s", level, format);
+	vprintf(buf, args);
+}
+
+/* log message with log level DEBUG */
+void log_debug(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	if (loglevel > LOGLEVEL_DEBUG) {
+		return;
+	}
+	_log("DEBUG", format, args);
+	va_end(args);
+}
+
+/* log message with log level INFO */
+void log_info(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	if (loglevel > LOGLEVEL_INFO) {
+		return;
+	}
+	_log("INFO", format, args);
+	va_end(args);
+}
+
+/* log message with log level WARN */
+void log_warn(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	if (loglevel > LOGLEVEL_WARN) {
+		return;
+	}
+	_log("WARN", format, args);
+	va_end(args);
+}
+
+/* log message with log level ERROR */
+void log_error(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	if (loglevel > LOGLEVEL_ERROR) {
+		return;
+	}
+	_log("ERROR", format, args);
+	va_end(args);
 }
 
 /* command line argument parsing keys */
