@@ -49,6 +49,9 @@
 
 const char *argp_program_version = PURPLED_VERSION;
 
+/* disable message history? */
+int disable_history;
+
 /* logging functions */
 void log_debug(const char *format, ...);
 void log_info(const char *format, ...);
@@ -346,6 +349,15 @@ static PurpleRequestUiOps purpld_request_uiops =
 
 /*** Conversation uiops ***/
 static void
+purpld_create_conv(PurpleConversation *conv)
+{
+	/* if disable-history is set, turn off logging */
+	if (disable_history) {
+		purple_conversation_set_logging(conv, FALSE);
+	}
+}
+
+static void
 purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 			const char *message, PurpleMessageFlags flags,
 			time_t mtime)
@@ -476,7 +488,7 @@ purpld_chat_rename_user(PurpleConversation *conv, const char *old_name, const
 
 static PurpleConversationUiOps purpld_conv_uiops =
 {
-	NULL,                      /* create_conversation  */
+	purpld_create_conv,        /* create_conversation  */
 	NULL,                      /* destroy_conversation */
 	NULL,                      /* write_chat           */
 	NULL,                      /* write_im             */
@@ -2257,6 +2269,9 @@ int main(int argc, char *argv[])
 		log_error("error parsing log level\n");
 		return (EXIT_FAILURE);
 	}
+
+	/* disable message history */
+	disable_history = arguments.disable_history;
 
 	/* Bye-bye terminal */
 	if (arguments.daemon)
