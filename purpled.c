@@ -1472,12 +1472,24 @@ gboolean respond_account_list(client* ptr, char *mesg, char **args,
 	char tmp[PD_STRING];
 	GList *iter;
 
+	/* return account list to client */
 	for (iter = purple_accounts_get_all(); iter; iter = iter->next) {
 		PurpleAccount *account = iter->data;
 		_create_account_msg(tmp, account);
 		purpld_client_send(ptr, tmp);
 	}
 	purpld_client_send(ptr, "info: listed accounts\r\n");
+
+	/* if there are no accounts and push accounts is active, send help */
+	if (!purple_accounts_get_all()) {
+		purpld_client_send(ptr, "info: You do not have any accounts "
+				   "configured.\r\n");
+		purpld_client_send(ptr, "info: You can add a new account "
+				   "with the following command: account add "
+				   "<protocol> <username> <password>\r\n");
+		purpld_client_send(ptr, "info: Example: account add xmpp "
+				   "dummy@jabber.org MyPassword\r\n");
+	}
 
 	return TRUE;
 }
