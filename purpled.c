@@ -1460,27 +1460,29 @@ int _get_account_id(PurpleAccount *account) {
 	return -1;
 }
 
+void _create_account_msg(char *buf, PurpleAccount *account) {
+	PurplePresence *pres = purple_account_get_presence(account);
+	PurpleStatus *stat = purple_presence_get_active_status(pres);
+	sprintf(buf, "account: %d %s %s %s [%s]\r\n",
+		_get_account_id(account),
+		purple_account_get_alias(account),
+		purple_account_get_protocol_name(account),
+		account->username,
+		(purple_account_is_connected(account) ?
+		 purple_status_get_name(stat) :
+		 (purple_account_is_connecting(account) ? "Connecting" :
+		  "Offline")));
+}
+
 gboolean respond_account_list(client* ptr, char *mesg, char **args,
 			      gpointer user_data) {
-	GList *iter;
-	int n;
 	char tmp[PD_STRING];
+	GList *iter;
 
-	n = 0;
 	for (iter = purple_accounts_get_all(); iter; iter = iter->next) {
 		PurpleAccount *account = iter->data;
-		PurplePresence *pres = purple_account_get_presence(account);
-		PurpleStatus *stat = purple_presence_get_active_status (pres);
-		sprintf(tmp, "account: %d %s %s %s [%s]\r\n", n,
-			purple_account_get_alias(account),
-			purple_account_get_protocol_name(account),
-			account->username,
-			(purple_account_is_connected(account) ?
-			 purple_status_get_name(stat) :
-			 (purple_account_is_connecting(account) ? "Connecting" :
-			  "Offline")));
+		_create_account_msg(tmp, account);
 		purpld_client_send(ptr, tmp);
-		n++;
 	}
 	purpld_client_send(ptr, "info: listed accounts\r\n");
 
