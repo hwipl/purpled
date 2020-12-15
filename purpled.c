@@ -1466,6 +1466,7 @@ gboolean respond_account_list(client* ptr, char *mesg, char **args,
 		purpld_client_send(ptr, tmp);
 		n++;
 	}
+	purpld_client_send(ptr, "info: listed accounts\r\n");
 
 	return TRUE;
 }
