@@ -1447,6 +1447,19 @@ gboolean respond_account_add(client* ptr, char *mesg, char **args,
 	return TRUE;
 }
 
+int _get_account_id(PurpleAccount *account) {
+	GList *iter;
+	int n = 0;
+
+	for (iter = purple_accounts_get_all(); iter; iter = iter->next) {
+		if (account == iter->data) {
+			return n;
+		}
+		n++;
+	}
+	return -1;
+}
+
 gboolean respond_account_list(client* ptr, char *mesg, char **args,
 			      gpointer user_data) {
 	GList *iter;
