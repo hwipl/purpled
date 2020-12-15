@@ -825,6 +825,8 @@ gboolean respond_command_help(client* ptr, char *mesg, char **args,
 		"    invite the user <user> to the group chat <chat> on "
 		"the account with the\n"
 		"    account id <id>.\n"
+		"version\n"
+		"    get version of the backend\n"
 		"bye\n"
 		"    disconnect from backend\n"
 		"quit\n"
