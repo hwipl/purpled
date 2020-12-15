@@ -610,24 +610,11 @@ void client_set_instance(client* ptr) {
 		ptr->instance = min_i + 1;
 }
 
-int _get_account_id(PurpleAccount *account) {
-	GList *iter;
-	int n = 0;
-
-	for (iter = purple_accounts_get_all(); iter; iter = iter->next) {
-		if (account == iter->data) {
-			return n;
-		}
-		n++;
-	}
-	return -1;
-}
-
 void _create_account_msg(char *buf, PurpleAccount *account) {
 	PurplePresence *pres = purple_account_get_presence(account);
 	PurpleStatus *stat = purple_presence_get_active_status(pres);
 	sprintf(buf, "account: %d %s %s %s [%s]\r\n",
-		_get_account_id(account),
+		g_list_index(purple_accounts_get_all(), account),
 		purple_account_get_alias(account),
 		purple_account_get_protocol_name(account),
 		account->username,
