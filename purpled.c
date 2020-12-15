@@ -52,6 +52,9 @@ const char *argp_program_version = PURPLED_VERSION;
 /* disable message history? */
 int disable_history;
 
+/* push accounts to clients? */
+int push_accounts;
+
 /* logging functions */
 void log_debug(const char *format, ...);
 void log_info(const char *format, ...);
@@ -1720,6 +1723,12 @@ static gboolean purpld_accept_client(GIOChannel *src, GIOCondition condition,
 	clients = g_list_append (clients, new_client);
 
 	total_c++;
+
+	/* push accounts */
+	if (push_accounts) {
+		respond_account_list(new_client, NULL, NULL, NULL);
+	}
+
 	return TRUE;
 }
 
@@ -2273,6 +2282,9 @@ int main(int argc, char *argv[])
 
 	/* disable message history */
 	disable_history = arguments.disable_history;
+
+	/* enable pushing accounts to clients */
+	push_accounts = arguments.push_accounts;
 
 	/* Bye-bye terminal */
 	if (arguments.daemon)
