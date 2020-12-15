@@ -1468,6 +1468,12 @@ gboolean respond_account_add(client* ptr, char *mesg, char **args,
 
 			purple_accounts_add(account);
 
+			/* push new account to client */
+			if (push_accounts) {
+				char tmp[PD_STRING];
+				_create_account_msg(tmp, account);
+				purpld_client_send(ptr, tmp);
+			}
 			break;
 		}
 	}
