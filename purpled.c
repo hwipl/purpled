@@ -1725,6 +1725,7 @@ static gboolean purpld_accept_client(GIOChannel *src, GIOCondition condition,
 	struct sockaddr_in cliaddr;
 	static socklen_t clilen = sizeof(cliaddr);
 	int listenfd = g_io_channel_unix_get_fd(src);
+	char tmp[PD_STRING];
 	int connfd;
 
 	connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
@@ -1744,8 +1745,16 @@ static gboolean purpld_accept_client(GIOChannel *src, GIOCondition condition,
 
 	total_c++;
 
+	/* send welcome message */
+	sprintf(tmp, "info: Welcome to %s!\r\n", PURPLED_VERSION);
+	purpld_client_send(new_client, tmp);
+	purpld_client_send(new_client, "info: Enter \"help\" for a list of "
+			   "available commands and their help texts\r\n");
+
 	/* push accounts */
 	if (push_accounts) {
+		purpld_client_send(new_client,
+				   "info: Listing your accounts:\r\n");
 		respond_account_list(new_client, NULL, NULL, NULL);
 	}
 
