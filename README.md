@@ -1,6 +1,13 @@
-# purpleD mirror/fork
+# purpled
 
-This is a mirror/fork of the purpleD libpurple daemon:
+purpled is a network daemon that implements the nuqql interface and uses
+[libpurple](https://developer.pidgin.im/) to connect to various
+instant-messaging networks. It can be used as a backend for
+[nuqql](https://github.com/hwipl/nuqql) or as a standalone chat client daemon.
+
+## History:
+
+purpled is a mirror/fork of the purpleD libpurple daemon:
 https://sourceforge.net/projects/purpled/
 
 Summary from sf.net:
