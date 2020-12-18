@@ -39,6 +39,13 @@ directory.
 
 ## Changes:
 
+* devel:
+  * Add command line arguments and update argument parsing
+    * Allow pushing accounts to the client
+    * Allow disabling the message history
+    * Add simple logging and logging level definition
+  * Add welcome message and account adding help messages
+  * Cleanups and fixes
 * v0.5:
   * Add new commands:
     * `bye`: disconnect from purpled.
