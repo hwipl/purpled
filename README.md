@@ -37,6 +37,33 @@ Note: these steps require the [meson](https://mesonbuild.com/) build system.
 In case you want to use the old Makefiles etc., you can find them in the `orig`
 directory.
 
+## Usage:
+
+You can run purpled with the following command line arguments:
+
+```
+Usage: purpled [OPTION...]
+
+      --af=AF                set socket address family: "inet" for AF_INET or
+                             "unix" for AF_UNIX
+  -d, --daemonize            run purpled as a unix daemon
+      --disable-history      disable message history
+  -i, --inet-socket          use AF_INET/TCP socket
+  -l, --address=LISTEN_IP    listen on IP address LISTEN_IP
+      --loglevel=LEVEL       set logging level to LEVEL
+  -p, --port=PORT            listen on TCP port PORT
+      --push-accounts        push accounts to client
+      --sockfile=FILE        use AF_UNIX socket file in DIR
+  -u, --unix-socket          use AF_UNIX socket
+  -w, --dir=DIR              set working directory to DIR
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+  -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
+```
+
 ## Changes:
 
 * devel:
