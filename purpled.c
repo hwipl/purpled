@@ -390,7 +390,7 @@ purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 				      (int) mtime, who, escaped);
 
 		/* only show messages from others, not own messages */
-		if (!purple_strequal(who, nick))
+		if (!filter_own || !purple_strequal(who, nick))
 			purpld_inform_client(account, buf);
 	} else {
 		buf = g_strdup_printf("message: %d %s %d %s %s\r\n", n,
