@@ -55,6 +55,9 @@ int disable_history;
 /* push accounts to clients? */
 int push_accounts;
 
+/* filter own messages? */
+int filter_own;
+
 /* logging functions */
 void log_debug(const char *format, ...);
 void log_info(const char *format, ...);
@@ -2181,6 +2184,7 @@ void log_error(const char *format, ...) {
 #define KEY_LOGLEVEL	1026
 #define KEY_NOHISTORY	1027
 #define KEY_PUSHACCS	1028
+#define KEY_FILTEROWN	1029
 
 /* definition of command line argument options */
 static struct argp_option options[] = {
@@ -2196,6 +2200,7 @@ static struct argp_option options[] = {
 	{"loglevel", KEY_LOGLEVEL, "LEVEL", 0, "set logging level to LEVEL"},
 	{"disable-history", KEY_NOHISTORY, 0, 0, "disable message history"},
 	{"push-accounts", KEY_PUSHACCS, 0, 0, "push accounts to client"},
+	{"filter-own", KEY_FILTEROWN, 0, 0, "enable filtering of own messages"},
 	{0}
 };
 
@@ -2211,6 +2216,7 @@ struct arguments {
 	char *loglevel;
 	int disable_history;
 	int push_accounts;
+	int filter_own;
 };
 
 /* parse a single command line argument */
@@ -2267,6 +2273,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state) {
 	case KEY_PUSHACCS:
 		arguments->push_accounts = 1;
 		break;
+	case KEY_FILTEROWN:
+		arguments->filter_own = 1;
+		break;
 	case ARGP_KEY_END:
 		/* either AF_INET or AF_UNIX must be selected */
 		if (!arguments->unix_socket && !arguments->inet_socket) {
@@ -2299,6 +2308,7 @@ int main(int argc, char *argv[])
 	arguments.loglevel = "warn";
 	arguments.disable_history = 0;
 	arguments.push_accounts = 0;
+	arguments.filter_own = 0;
 
 	/* parse command line arguments */
 	if (argp_parse(&argp, argc, argv, 0, 0, &arguments)) {
@@ -2316,6 +2326,9 @@ int main(int argc, char *argv[])
 
 	/* enable pushing accounts to clients */
 	push_accounts = arguments.push_accounts;
+
+	/* enable filtering of own messages */
+	filter_own = arguments.filter_own;
 
 	/* Bye-bye terminal */
 	if (arguments.daemon)
