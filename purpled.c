@@ -385,6 +385,11 @@ purpld_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 		PurpleConvChat *data = purple_conversation_get_chat_data(conv);
 		const char *nick = purple_conv_chat_get_nick(data);
 
+		/* rewrite sender of own messages to "<self>" */
+		if (purple_strequal(who, nick)) {
+			who = "<self>";
+		}
+
 		buf = g_strdup_printf("chat: msg: %d %s %d %s %s\r\n", n,
 				      purple_conversation_get_name(conv),
 				      (int) mtime, who, escaped);
