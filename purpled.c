@@ -1446,6 +1446,7 @@ gboolean respond_account_add(client* ptr, char *mesg, char **args,
 
 		if (!g_ascii_strcasecmp(args[1], info->name)) {
 			PurpleAccount *account;
+			char tmp[PD_STRING];
 
 			/* Create the account */
 			account = purple_account_new(args[2], info->id);
@@ -1465,9 +1466,14 @@ gboolean respond_account_add(client* ptr, char *mesg, char **args,
 
 			purple_accounts_add(account);
 
+			/* send info to client */
+			sprintf(tmp, "info: added account %d.\r\n",
+				g_list_index(purple_accounts_get_all(),
+					     account));
+			purpld_client_send(ptr, tmp);
+
 			/* push new account to client */
 			if (push_accounts) {
-				char tmp[PD_STRING];
 				_create_account_msg(tmp, account);
 				purpld_client_send(ptr, tmp);
 			}
