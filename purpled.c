@@ -261,9 +261,10 @@ purpld_request_file(const char *title, const char *filename,
 	gchar *msg = g_strdup_printf("info: %d) FILE %d %s %s\r\n", n,
 				     (int) time(NULL), who, path);
 	purpld_inform_client(account, msg) ;
+
 	if (!conv) {
 		conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,
-							     who, account );
+							     who, account);
 		if (!conv)
 			conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,
 						       account, who);
@@ -279,15 +280,14 @@ purpld_request_file(const char *title, const char *filename,
 }
 
 static void*
-purpld_request_input (const char *title, const char *primary,
-		      const char *secondary, const char *default_value,
-		      gboolean multiline, gboolean masked, gchar *hint,
-		      const char *ok_text, GCallback ok_cb,
-		      const char *cancel_text, GCallback cancel_cb,
-		      PurpleAccount *account, const char *who,
-		      PurpleConversation *conv, void *user_data)
+purpld_request_input(const char *title, const char *primary,
+		     const char *secondary, const char *default_value,
+		     gboolean multiline, gboolean masked, gchar *hint,
+		     const char *ok_text, GCallback ok_cb,
+		     const char *cancel_text, GCallback cancel_cb,
+		     PurpleAccount *account, const char *who,
+		     PurpleConversation *conv, void *user_data)
 {
-
 	printf("libpurple input request: \"%s - %s - %s - %s\"\n", title,
 	       primary, secondary, default_value);
 
@@ -306,7 +306,8 @@ purpld_request_action(const char *title, const char *primary,
 	gboolean done = FALSE;
 	int i;
 
-	printf("libpurple request:\"%s - %s  - %s\"", title, primary, secondary);
+	printf("libpurple request:\"%s - %s  - %s\"", title, primary,
+	       secondary);
 	for (i = 0; i < actioncount; i++)
 	{
 		const char *text = va_arg(actions, const char *);
@@ -540,7 +541,7 @@ int strcrep(char *str, char src, char dst) {
 			*ptr = dst;
 		ptr++;
 	}
-    return 0;
+	return 0;
 }
 
 static gint find_account(gconstpointer a, gconstpointer b) {
@@ -695,7 +696,6 @@ gboolean respond_http_generic(client* ptr, char *mesg, char **args,
 
 gboolean respond_generic_dummy(client* ptr, char *mesg, char **args,
 			       gpointer user_data) {
-
 	int i = 0;
 
 	log_info("Command parser sample function.\n");
@@ -796,9 +796,9 @@ gboolean respond_command_ver(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
 	gchar *buf;
 
-	buf = g_strdup_printf ("info: %s (libpurple %d.%d.%d)\r\n",
-			       PURPLED_VERSION, PURPLE_MAJOR_VERSION,
-			       PURPLE_MINOR_VERSION, PURPLE_MICRO_VERSION);
+	buf = g_strdup_printf("info: %s (libpurple %d.%d.%d)\r\n",
+			      PURPLED_VERSION, PURPLE_MAJOR_VERSION,
+			      PURPLE_MINOR_VERSION, PURPLE_MICRO_VERSION);
 
 	purpld_client_send(ptr, buf);
 	g_free(buf);
@@ -813,9 +813,10 @@ gboolean respond_command_who(client* ptr, char *mesg, char **args,
 
 	for (iter = g_list_first(clients);iter;iter = iter->next) {
 		cli = iter->data;
-        char *conn_type = (cli->conntype == CONNECTION_IRC ? "irc" :
-			   (cli->conntype == CONNECTION_HTTP ? "http" : "raw"));
-        char *cli_addr = inet_ntoa(cli->addr.sin_addr);
+		char *conn_type = (cli->conntype == CONNECTION_IRC ? "irc" :
+				   (cli->conntype == CONNECTION_HTTP ? "http" :
+				    "raw"));
+		char *cli_addr = inet_ntoa(cli->addr.sin_addr);
 		buf = g_strdup_printf ("info: %10s/%s%d %s\r\n",
 				       (cli->user[0] ? cli->user : "????"),
 				       conn_type, cli->instance, cli_addr);
@@ -1608,7 +1609,9 @@ void purpld_process_client(client* ptr) {
 
 	/* No command ready, just buffer */
 	if ((off = strrpos(ptr->buffer, '\n', len)) < 0) return;
-	/* More than 1 command - we must check this now, because buffer will be cleared afterwards */
+
+	/* More than 1 command - we must check this now, because buffer will be
+	 * cleared afterwards */
 	if ( strpos(ptr->buffer, '\n') != off ) several = TRUE;
 
 	/* Copy to minibuffer */
@@ -1930,35 +1933,37 @@ void init_server_unix(char *sock_name) {
 int init_libpurple(void) {
 	PurpleSavedStatus *status;
 
-	/* libpurple's built-in DNS resolution...	[trim].. will it conflict with daemon? seems not */
+	/* libpurple's built-in DNS resolution...	[trim].. will it
+	 * conflict with daemon? seems not */
 	signal(SIGCHLD, SIG_IGN);
 
 	/* Set path to search for ui-specific plugins. (Not protocols!) */
-	//purple_plugins_add_search_path(CUSTOM_PLUGIN_PATH);
 	purple_util_set_user_dir(purpld_dirs.home_dir);
 
-	/* We do not want any debugging for now to keep the noise to a minimum. */
+	/* We do not want any debugging for now to keep the noise to a minimum.
+	 */
 	purple_debug_set_enabled(FALSE);
 
 	/* Set the core-uiops, which is used to
 	 * 	- initialize the ui specific preferences.
 	 * 	- initialize the debug ui.
 	 * 	- initialize the ui components for all the modules.
-	 * 	- uninitialize the ui components for all the modules when the core terminates.
+	 * 	- uninitialize the ui components for all the modules when the
+	 * 	  core terminates.
 	 */
-	// purple_core_set_ui_ops(&purpld_core_uiops);
 	purple_conversations_set_ui_ops(&purpld_conv_uiops);
 	purple_notify_set_ui_ops(&purpld_notify_uiops);
 	purple_request_set_ui_ops(&purpld_request_uiops);
 	purple_accounts_set_ui_ops(&purpld_accounts_uiops);
 
-	/* Set the uiops for the eventloop. If your client is glib-based, you can safely
-	 * copy this verbatim. */
+	/* Set the uiops for the eventloop. If your client is glib-based, you
+	 * can safely copy this verbatim. */
 	purple_eventloop_set_ui_ops(&glib_eventloops);
 
-	/* Now that all the essential stuff has been set, let's try to init the core. It's
-	 * necessary to provide a non-NULL name for the current ui to the core. This name
-	 * is used by stuff that depends on this ui, for example the ui-specific plugins. */
+	/* Now that all the essential stuff has been set, let's try to init the
+	 * core. It's necessary to provide a non-NULL name for the current ui to
+	 * the core. This name is used by stuff that depends on this ui, for
+	 * example the ui-specific plugins. */
 	if (!purple_core_init(UI_ID)) {
 		/* Initializing the core failed. Terminate. */
 		log_error("libpurple initialization failed. Dumping core.\n"
