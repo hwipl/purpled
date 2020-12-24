@@ -195,16 +195,6 @@ static PurpleAccountUiOps purpld_accounts_uiops =
 };
 
 /*** Notify uiops ***/
-#if 0
-static void *
-purpld_notify_message(PurpleNotifyMsgType type, const char *title, const char *primary, const char *secondary)
-{
-	char mes[PD_STRING];
-	sprintf(mes, "%s %s %s \n", title, primary, secondary);
-	purpld_inform_client( 0, mes );
-}
-#endif
-
 static void *
 purpld_notify_userinfo(PurpleConnection *gc, const char *who,
 		       PurpleNotifyUserInfo *user_info)
@@ -270,7 +260,6 @@ purpld_request_file(const char *title, const char *filename,
 	gchar *msg = g_strdup_printf("info: %d) FILE %d %s %s\r\n", n,
 				     (int) time(NULL), who, path);
 	purpld_inform_client(account, msg) ;
-#if 1
 	if (!conv) {
 		conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,
 							     who, account );
@@ -280,7 +269,6 @@ purpld_request_file(const char *title, const char *filename,
 	}
 	purple_conversation_write(conv, who, msg, PURPLE_MESSAGE_RECV,
 				  time(NULL));
-#endif
 	g_free(msg);
 	callback(xfer, path);
 
@@ -520,32 +508,6 @@ static PurpleConversationUiOps purpld_conv_uiops =
 	NULL
 };
 
-#if 0
-static void
-purpld_ui_init(void)
-{
-	/**
-	 * This should initialize the UI components for all the modules. Here we
-	 * just initialize the UI for conversations.
-	 */
-	purple_conversations_set_ui_ops(&purpld_conv_uiops);
-}
-
-static PurpleCoreUiOps purpld_core_uiops =
-{
-	NULL,
-	NULL,
-	purpld_ui_init,
-	purpld_ui_quit,
-
-	/* padding */
-	NULL,
-	NULL,
-	NULL,
-	NULL
-};
-#endif
-
 char *strleft(char *str, int len, int off) {
 	int i;
 	for (i = off; i < len; i++)
@@ -678,13 +640,6 @@ gboolean respond_to_login(client* ptr, char *mesg, char **args,
 
 gboolean respond_irc_generic(client* ptr, char *mesg, char **args,
 			     gpointer user_data) {
-#if 0
-	printf ("IRC:\n");
-	int i = 0;
-	for (i = 0; args[i]; i++) {
-		printf ("%c) %s\n", 64+i, args[i]);
-	}
-#endif
 	if (!strcasecmp(args[0], "NICK") ) {
 		ptr->conntype = CONNECTION_IRC;
 		strcpy(ptr->user, args[1]);
@@ -720,13 +675,6 @@ gboolean respond_http_content(client* ptr, char *mesg, char **args,
 }
 gboolean respond_http_generic(client* ptr, char *mesg, char **args,
 			      gpointer user_data) {
-#if 0
-	printf ("HTTP:\n");
-	int i = 0;
-	for (i = 0; args[i]; i++) {
-		printf ("%c) %s\n", 64+i, args[i]);
-	}
-#endif
 	ptr->conntype = CONNECTION_HTTP;
 	gchar *msg;
 	msg = g_strdup_printf("%s 200 OK\r\n", args[2]);
@@ -2363,13 +2311,6 @@ int main(int argc, char *argv[])
 
 	/* Init client(s) part */
 	init_libpurple();
-
-#if 0
-	/* Reroute stdout and stderr into log_file */
-	freopen(purpld_dirs.log_file, "w", stderr);
-	FILE *wfd = freopen(purpld_dirs.log_file, "w", stdout);
-	setlinebuf(wfd);
-#endif
 
 	/* Endless loop glib-style */
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
