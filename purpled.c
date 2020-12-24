@@ -39,14 +39,7 @@
 
 #include "defines.h"
 
-/**
- * The following eventloop functions are used in both pidgin and purple-text.
- * If your application uses glib mainloop, you can safely use this verbatim.
- */
-#define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
-#define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
-
-
+/* --version string */
 const char *argp_program_version = PURPLED_VERSION;
 
 /* disable message history? */
@@ -63,6 +56,24 @@ void log_debug(const char *format, ...);
 void log_info(const char *format, ...);
 void log_warn(const char *format, ...);
 void log_error(const char *format, ...);
+
+
+void client_command(client* ptr, char *mesg);
+void purpld_process_client(client* ptr);
+void purpld_client_send(client* ptr, const char *mesg);
+static void quit_purpled();
+
+int total_c = 0;
+int listenfd;
+GList *clients = NULL;
+struct purpld_dirs purpld_dirs;
+
+/**
+ * The following eventloop functions are used in both pidgin and purple-text.
+ * If your application uses glib mainloop, you can safely use this verbatim.
+ */
+#define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
+#define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
 
 typedef struct _PurpleGLibIOClosure {
 	PurpleInputFunction function;
@@ -146,16 +157,6 @@ static PurpleEventLoopUiOps glib_eventloops =
 	NULL
 };
 /*** End of the eventloop functions. ***/
-
-void client_command(client* ptr, char *mesg);
-void purpld_process_client(client* ptr);
-void purpld_client_send(client* ptr, const char *mesg);
-static void quit_purpled();
-
-int total_c = 0;
-int listenfd;
-GList *clients = NULL;
-struct purpld_dirs purpld_dirs;
 
 void purpld_inform_client(PurpleAccount *account, char *message) {
 	GList *iter;
