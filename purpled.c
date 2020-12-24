@@ -148,7 +148,7 @@ static PurpleEventLoopUiOps glib_eventloops =
 /*** End of the eventloop functions. ***/
 
 void client_command(client* ptr, char *mesg);
-void purpld_proccess_client(client* ptr);
+void purpld_process_client(client* ptr);
 void purpld_client_send(client* ptr, const char *mesg);
 static void quit_purpled();
 
@@ -670,7 +670,7 @@ gboolean respond_http_content(client* ptr, char *mesg, char **args,
 	if (strlen(ptr->buffer) == ptr->content_length) {
 		strcat(ptr->buffer, "\n");
 	}
-	purpld_proccess_client(ptr);
+	purpld_process_client(ptr);
 	return TRUE;
 }
 gboolean respond_http_generic(client* ptr, char *mesg, char **args,
@@ -1602,7 +1602,7 @@ void purpld_client_send(client* ptr, const char *mesg) {
 		send(ptr->connfd, mesg, strlen(mesg), 0);
 }
 
-void purpld_proccess_client(client* ptr) {
+void purpld_process_client(client* ptr) {
 	int i;
 	int len, off;
 	gboolean several = FALSE;
@@ -1669,7 +1669,7 @@ static gboolean purpld_handle_client(GIOChannel *src, GIOCondition condition,
 
 	strcat(client_ptr->buffer, mesg);
 
-	purpld_proccess_client(client_ptr);
+	purpld_process_client(client_ptr);
 
 	if (client_ptr->kill == TRUE) {
 		log_info("Connection [%d] closed\n", connfd);
