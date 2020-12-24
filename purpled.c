@@ -222,7 +222,7 @@ purpld_notify_userinfo(PurpleConnection *gc, const char *who,
 
 static PurpleNotifyUiOps purpld_notify_uiops =
 {
-	NULL, //purpld_notify_message,			/* message */
+	NULL,						/* message */
 	NULL,						/* email */
 	NULL,						/* emails */
 	NULL,						/* formatted */
@@ -329,12 +329,12 @@ purpld_request_action(const char *title, const char *primary,
 static PurpleRequestUiOps purpld_request_uiops =
 {
 	purpld_request_input,
-	NULL,		// _request_choice,
+	NULL,
 	purpld_request_action,
-	NULL,		//_request_fields,
+	NULL,
 	purpld_request_file,
-	NULL,		//_close_request,
-	NULL,		//_request_folder,
+	NULL,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -624,12 +624,6 @@ gboolean respond_to_login(client* ptr, char *mesg, char **args,
 		sprintf(mesg, ":%s 353 %s = &root :@daemon %s\n", ptr->server,
 			ptr->user, ptr->user);
 		send(ptr->connfd, mesg, strlen(mesg), 0);
-
-		//->send(ptr->connfd, ":localhost 001 driedfruit\n", strlen(":localhost 001 driedfruit\n"), 0);
-		//send(connfd, ":localhost 374 :NO MOTD\n", strlen(":localhost 001 :Welcome\n"), 0);
-		//send(connfd, ":localhost USER driedfruit driedfruit localhost :&root\n", strlen("localhost USER driedfruit driedfruit localhost :&root\n"), 0);
-		//->send(ptr->connfd, ":driedfruit!driedfruit@localhost JOIN :&root\n", strlen(":driedfruit!driedfruit@localhost JOIN :&root\n"), 0);
-		//->send(ptr->connfd, ":localhost 353 driedfruit = &root :@daemon driedfruit\n", strlen(":localhost 353 driedfruit = &root :@daemon driedfruit\n"), 0);
 	}
 
 	client_set_instance(ptr);
@@ -1562,7 +1556,7 @@ void client_command(client* ptr, char *mesg) {
 		{ "Content-Length:",	respond_http_content,		0 },
 		{ "http_offset=",	respond_http_command,		2 },
 		{ "account",		respond_process_account,	2 },
-		{ "acc",		respond_process_account,	2 }, //acc - shorthand for account
+		{ "acc",		respond_process_account,	2 },
 		{ "bye",		respond_command_bye,		0 },
 		{ "quit",		respond_command_quit,		0 },
 		{ "help",		respond_command_help,		0 },
@@ -1978,14 +1972,8 @@ int init_libpurple(void) {
 	/* Load the preferences. */
 	purple_prefs_load();
 
-	/* Load the desired plugins. The client should save the list of loaded plugins in
-	 * the preferences using purple_plugins_save_loaded(PLUGIN_SAVE_PREF) */
-	//purple_plugins_load_saved(PLUGIN_SAVE_PREF);
-
 	/* Load the pounces. */
 	purple_pounces_load();
-
-	//printf("libpurple initialized.\n");
 
 	/* This part I actually don't understand (yes, I admit!)
 	 *
