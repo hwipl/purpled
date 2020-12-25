@@ -48,6 +48,7 @@ Usage: purpled [OPTION...]
                              "unix" for AF_UNIX
   -d, --daemonize            run purpled as a unix daemon
       --disable-history      disable message history
+      --filter-own           enable filtering of own messages
   -i, --inet-socket          use AF_INET/TCP socket
   -l, --address=LISTEN_IP    listen on IP address LISTEN_IP
       --loglevel=LEVEL       set logging level to LEVEL
