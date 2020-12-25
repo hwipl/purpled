@@ -72,7 +72,9 @@ for any corresponding short options.
     * Allow pushing accounts to the client
     * Allow disabling the message history
     * Add simple logging and logging level definition
-  * Add welcome message and account adding help messages
+    * Allow filtering of own messages in chats
+  * Rewrite sender of own messages to `<self>`
+  * Add welcome message, account adding help, account added info messages
   * Cleanups and fixes
 * v0.5:
   * Add new commands:
