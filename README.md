@@ -67,7 +67,7 @@ for any corresponding short options.
 
 ## Changes:
 
-* devel:
+* v0.6.0:
   * Add command line arguments and update argument parsing
     * Allow pushing accounts to the client
     * Allow disabling the message history

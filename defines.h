@@ -1,5 +1,5 @@
 #define UI_ID			"purpled"
-#define PURPLED_VERSION		"purpled v0.5.0"
+#define PURPLED_VERSION		"purpled v0.6.0"
 
 #define CONNECTION_UNKNOWN	0
 #define CONNECTION_RAW		1
