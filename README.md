@@ -7,20 +7,15 @@ instant-messaging networks. It can be used as a backend for
 
 ## About:
 
-purpled is a mirror/fork of the purpleD libpurple daemon:
-https://sourceforge.net/projects/purpled/
-
-Summary from sf.net:
-"purpled is a libpurple daemon, aimed to provide instant-messaging services to
-external applications."
-
-Original project members:
+purpled is a fork of the [purpleD](https://sourceforge.net/projects/purpled/)
+libpurple daemon authored by the original project members:
 * [XcinnaY](https://sourceforge.net/u/xcinnay/)
 * [driedfruit](https://sourceforge.net/u/driedfruit/)
 
-The original code mirrored from sf.net is tagged as
-["mirrored"](https://github.com/hwipl/purpled/releases/tag/mirrored). See
-README for original description and INSTALL for original building information.
+The original code mirrored from sourceforge.net is tagged as
+["mirrored"](https://github.com/hwipl/purpled/releases/tag/mirrored). In the
+current code, see orig/README for original description and orig/INSTALL for
+original building information.
 
 Later commits contain the changes described in the "Changes" section.
 
